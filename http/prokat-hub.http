@@ -1,0 +1,78 @@
+# Requests for the Prokat Hub API.
+# Works with the VS Code REST Client extension, Visual Studio and JetBrains Rider.
+# Passwords are the SEED_*_PASSWORD values from your .env file.
+
+@baseUrl = http://localhost:8080
+@customerEmail = customer@prokathub.test
+@customerPassword = Customer12345
+@staffEmail = staff@prokathub.test
+@staffPassword = Staff12345
+
+### Health check
+GET {{baseUrl}}/health
+
+### Categories
+GET {{baseUrl}}/api/categories
+
+### Item catalogue, page 1
+GET {{baseUrl}}/api/items?page=1&pageSize=12
+
+### One item
+GET {{baseUrl}}/api/items/1
+
+### Unknown item → 404 ProblemDetails
+GET {{baseUrl}}/api/items/99999
+
+### Register a new customer → 201
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "new.customer@example.com",
+  "password": "Password123",
+  "fullName": "New Customer"
+}
+
+### Log in as the seeded customer
+# @name customerLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{customerEmail}}",
+  "password": "{{customerPassword}}"
+}
+
+### Wrong password → 401
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{customerEmail}}",
+  "password": "wrong-password"
+}
+
+### Current user
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+
+### My rentals (Customer) → 200
+GET {{baseUrl}}/api/rentals/mine
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+
+### My rentals without a token → 401
+GET {{baseUrl}}/api/rentals/mine
+
+### Log in as staff
+# @name staffLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{staffEmail}}",
+  "password": "{{staffPassword}}"
+}
+
+### My rentals with a Staff token → 403
+GET {{baseUrl}}/api/rentals/mine
+Authorization: Bearer {{staffLogin.response.body.accessToken}}

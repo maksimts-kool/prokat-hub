@@ -1,0 +1,55 @@
+name: prokat-hub
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./server
+      dockerfile: ProkatHub.Api/Dockerfile
+      target: ${API_BUILD_TARGET:-dev}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
+      Cors__AllowedOrigins__0: ${CLIENT_ORIGIN:-http://localhost:5173}
+      Seed__Accounts__Admin__Password: ${SEED_ADMIN_PASSWORD:-}
+      Seed__Accounts__Staff__Password: ${SEED_STAFF_PASSWORD:-}
+      Seed__Accounts__Customer__Password: ${SEED_CUSTOMER_PASSWORD:-}
+      Seed__Accounts__Service__Password: ${SEED_SERVICE_PASSWORD:-}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    develop:
+      watch:
+        # Source changes are copied into the container and picked up by `dotnet watch`.
+        - action: sync
+          path: ./server/ProkatHub.Api
+          target: /src/ProkatHub.Api
+          ignore:
+            - bin/
+            - obj/
+            - ProkatHub.Api.csproj
+        # New packages need a fresh restore, so rebuild the image.
+        - action: rebuild
+          path: ./server/ProkatHub.Api/ProkatHub.Api.csproj
+
+volumes:
+  db-data:

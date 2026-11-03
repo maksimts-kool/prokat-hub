@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ProkatHub.Api/ProkatHub.Api.csproj" />
+  <Project Path="ProkatHub.Tests/ProkatHub.Tests.csproj" />
+  <Project Path="ProkatHub.Worker/ProkatHub.Worker.csproj" />
+</Solution>
