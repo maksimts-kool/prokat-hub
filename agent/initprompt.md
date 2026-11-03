@@ -1,6 +1,12 @@
-# Rendisüsteem — Initial Project Prompt
+# Rendisüsteem — Rental Management System
 
-Build a rental management system as **one responsive web application** that adapts to desktop, tablet, and phone screens.
+## Project overview
+
+Build a **rental company management system** for items such as bicycles, electronics, camping equipment, or tools. The rental category is selected by the student and approved by the teacher as part of the school project.
+
+Customers can browse rentable items, see which items are available for their selected dates, and make reservations. The system calculates rental costs, deposits, discounts for longer rentals, and penalties for late returns. Staff can issue and receive rented items, while administrators manage the catalogue and view rental reports.
+
+The application is **one responsive website** for desktop, tablet, and mobile browsers. **Do not build a separate mobile app.**
 
 ## Main features
 - Item catalogue with categories, search, filters, sorting, and pagination.
