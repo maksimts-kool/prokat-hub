@@ -14,7 +14,7 @@ One responsive website (React) talks to an ASP.NET Core Web API. Everything runs
 | `server/ProkatHub.Api/` | ASP.NET Core Web API: controllers, services, repositories, EF Core (PostgreSQL), Identity + JWT |
 | `server/ProkatHub.Worker/` | Hourly Worker Service that calls the API as the Service account |
 | `server/ProkatHub.Tests/` | xUnit unit tests |
-| `client/` | React web client |
+| `client/` | React web client: Vite, TypeScript, Tailwind CSS, shadcn/ui ([client/README.md](client/README.md)) |
 | `docs/` | Domain model, ER diagram and business rules ([docs/er-diagram.md](docs/er-diagram.md)) |
 | `http/` | `.http` request files for the API |
 | `agent/` | Project brief |
@@ -28,12 +28,13 @@ cp .env.example .env
 docker compose watch
 ```
 
-`docker compose watch` builds and starts PostgreSQL and the API, then syncs code changes into the API container, where `dotnet watch` reloads them. Use `docker compose up -d` to run without hot reload.
+`docker compose watch` builds and starts PostgreSQL, the API and the web client, then syncs code changes into the containers: `dotnet watch` reloads the API and Vite hot-reloads the client. Use `docker compose up -d` to run without hot reload.
 
 On startup in Development the API applies EF Core migrations and seeds the demo catalogue, discount tiers, one account per role and a few demo rentals.
 
 | URL | What |
 | --- | --- |
+| http://localhost:5173 | Web client |
 | http://localhost:8080/swagger | Swagger UI (Development only) |
 | http://localhost:8080/openapi/v1.json | OpenAPI document |
 | http://localhost:8080/health | Health check (API + database) |
