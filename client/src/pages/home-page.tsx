@@ -11,15 +11,22 @@ export function HomePage() {
   const [status, setStatus] = useState<ApiStatus>('checking')
 
   useEffect(() => {
-    const controller = new AbortController()
-    fetch(apiUrl('/health'), { signal: controller.signal })
-      .then((response) => setStatus(response.ok ? 'online' : 'offline'))
+    // Ignore the result after unmount instead of aborting the request. Aborting cancels the
+    // server's health check mid-query, and React StrictMode remounts every effect in dev,
+    // so the API would log a failed "database" health check on every page load.
+    let ignore = false
+    fetch(apiUrl('/health'))
+      .then((response) => {
+        if (!ignore) setStatus(response.ok ? 'online' : 'offline')
+      })
       .catch((error: unknown) => {
-        if (controller.signal.aborted) return
+        if (ignore) return
         setStatus('offline')
         toast.error('Cannot reach the API', { description: String(error) })
       })
-    return () => controller.abort()
+    return () => {
+      ignore = true
+    }
   }, [])
 
   return (
