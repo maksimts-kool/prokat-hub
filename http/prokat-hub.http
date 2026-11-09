@@ -17,6 +17,24 @@ GET {{baseUrl}}/api/categories
 ### Item catalogue, page 1
 GET {{baseUrl}}/api/items?page=1&pageSize=12
 
+### Search by name, brand or description
+GET {{baseUrl}}/api/items?search=sony
+
+### Cameras, most expensive first
+GET {{baseUrl}}/api/items?categoryId=1&sort=price_desc
+
+### Daily price between 20 € and 40 €, cheapest first
+GET {{baseUrl}}/api/items?minPrice=20&maxPrice=40&sort=price
+
+### Most rented items first
+GET {{baseUrl}}/api/items?sort=popularity&pageSize=5
+
+### Unknown sort value → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items?sort=rating
+
+### minPrice above maxPrice → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items?minPrice=50&maxPrice=10
+
 ### One item
 GET {{baseUrl}}/api/items/1
 
