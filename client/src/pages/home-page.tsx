@@ -24,14 +24,14 @@ export function HomePage() {
 
   return (
     <section className="space-y-8">
-      <div className="space-y-4">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      <div className="space-y-5 rounded-2xl bg-primary px-6 py-12 text-primary-foreground sm:px-12 sm:py-16">
+        <h1 className="max-w-xl text-3xl font-bold tracking-tight sm:text-5xl">
           Rent cameras, drones, laptops and more
         </h1>
-        <p className="max-w-2xl text-lg text-muted-foreground">
+        <p className="max-w-lg text-primary-foreground/80 sm:text-lg">
           Pick your dates, see the price with longer-rental discounts and book in a minute.
         </p>
-        <Button asChild size="lg">
+        <Button asChild variant="highlight" size="lg" className="px-5">
           <Link to="/catalogue">
             Browse the catalogue
             <ArrowRight aria-hidden />

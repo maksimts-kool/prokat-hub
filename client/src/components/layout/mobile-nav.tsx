@@ -1,7 +1,8 @@
-import { Menu, Package } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink } from 'react-router'
 import { navItems } from '@/components/layout/nav-items'
+import { Logo } from '@/components/logo'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -19,9 +20,8 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="w-72">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <Package className="size-5" aria-hidden />
-            Prokat Hub
+          <SheetTitle>
+            <Logo />
           </SheetTitle>
         </SheetHeader>
         <nav aria-label="Mobile" className="flex flex-col gap-1 px-4">
@@ -33,8 +33,8 @@ export function MobileNav() {
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent',
-                  isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground',
+                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
+                  isActive ? 'bg-accent text-accent-foreground' : 'text-foreground/70',
                 )
               }
             >
