@@ -1,5 +1,7 @@
 # Prokat Hub
 
+[![CI](https://github.com/maksimts-kool/prokat-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/maksimts-kool/prokat-hub/actions/workflows/ci.yml)
+
 A rental management system for an **electronics** rental shop: customers browse cameras, drones, laptops and more, check availability for their dates and book them; staff issue and receive items; admins manage the catalogue and see reports.
 
 One responsive website (React) talks to an ASP.NET Core Web API. Everything runs in Docker Compose.
@@ -17,6 +19,7 @@ One responsive website (React) talks to an ASP.NET Core Web API. Everything runs
 | `client/` | React web client: Vite, TypeScript, Tailwind CSS, shadcn/ui ([client/README.md](client/README.md)) |
 | `docs/` | Domain model, ER diagram and business rules ([docs/er-diagram.md](docs/er-diagram.md)) |
 | `http/` | `.http` request files for the API |
+| `.github/workflows/` | GitHub Actions CI ([ci.yml](.github/workflows/ci.yml)) |
 | `agent/` | Project brief |
 
 ## Quick start
@@ -70,3 +73,13 @@ cd server
 dotnet tool restore
 dotnet ef migrations add <Name> --project ProkatHub.Api --output-dir Data/Migrations
 ```
+
+## Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and on pull requests to `main`, with three jobs:
+
+| Job | What it checks |
+| --- | --- |
+| Server | `dotnet build` and `dotnet test` for `server/ProkatHub.slnx` (Release) |
+| Client | `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm format:check`, `pnpm build`, and `pnpm test` once the client has a test script |
+| Docker images | `docker compose build` for the dev images, plus the production API image (`API_BUILD_TARGET=final`) |
