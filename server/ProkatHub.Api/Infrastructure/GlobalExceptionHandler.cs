@@ -14,8 +14,17 @@ public sealed class GlobalExceptionHandler(
         ProblemDetails problem;
         if (exception is AppException appException)
         {
-            logger.LogInformation("{Method} {Path} failed with {StatusCode}: {Message}",
-                httpContext.Request.Method, httpContext.Request.Path, appException.StatusCode, appException.Message);
+            if (appException is RequestValidationException invalid)
+            {
+                logger.LogInformation("{Method} {Path} failed with {StatusCode}: invalid fields {Fields}",
+                    httpContext.Request.Method, httpContext.Request.Path, appException.StatusCode,
+                    string.Join(", ", invalid.Errors.Keys));
+            }
+            else
+            {
+                logger.LogInformation("{Method} {Path} failed with {StatusCode}: {Message}",
+                    httpContext.Request.Method, httpContext.Request.Path, appException.StatusCode, appException.Message);
+            }
 
             problem = appException is RequestValidationException validation
                 ? new ValidationProblemDetails(validation.Errors)

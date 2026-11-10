@@ -70,7 +70,20 @@ builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOpt
 builder.Services.AddScoped<DatabaseInitializer>();
 
 // --- Web API ---
-builder.Services.AddControllers();
+builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+{
+    // Log which fields failed automatic model validation; the response itself stays the default 400.
+    var createResponse = options.InvalidModelStateResponseFactory;
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("ProkatHub.Api.Validation");
+        logger.LogInformation("{Method} {Path} failed with 400: invalid fields {Fields}",
+            context.HttpContext.Request.Method, context.HttpContext.Request.Path,
+            string.Join(", ", context.ModelState.Where(e => e.Value?.Errors.Count > 0).Select(e => e.Key)));
+        return createResponse(context);
+    };
+});
 builder.Services.AddProblemDetails(options =>
     options.CustomizeProblemDetails = context =>
         context.ProblemDetails.Instance ??= $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}");
@@ -99,6 +112,8 @@ await using (var scope = app.Services.CreateAsyncScope())
     await initializer.InitializeAsync(app.Configuration.GetValue<bool>("Database:MigrateOnStartup"));
 }
 
+// First in the pipeline so it sees the final status code, including errors turned into ProblemDetails.
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 

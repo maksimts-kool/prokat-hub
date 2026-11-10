@@ -41,12 +41,20 @@ public sealed class AuthService(
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
-        if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
+        if (user is null)
         {
+            logger.LogWarning("Login failed: no account with the given email");
+            throw new UnauthorizedException("Invalid email or password.");
+        }
+
+        if (!await userManager.CheckPasswordAsync(user, request.Password))
+        {
+            logger.LogWarning("Login failed for user {UserId}: wrong password", user.Id);
             throw new UnauthorizedException("Invalid email or password.");
         }
 
         var roles = await userManager.GetRolesAsync(user);
+        logger.LogInformation("User {UserId} logged in with roles {Roles}", user.Id, string.Join(",", roles));
         return tokenService.CreateToken(user, roles.ToList());
     }
 

@@ -53,6 +53,14 @@ Seeded accounts (passwords are the `SEED_*_PASSWORD` values in `.env`):
 
 In Swagger, call `POST /api/auth/login`, copy `accessToken`, click **Authorize** and paste it.
 
+### Logs
+
+```bash
+docker compose logs -f api
+```
+
+The API writes one line per request with method, path, status, duration, user id and trace id. The trace id is the same as `traceId` in error responses, so a failed call in the browser can be matched with its log line. `/health`, Swagger and OpenAPI requests are logged at Debug and hidden by default. Change log levels with environment variables in `compose.yaml`, for example `Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Information` to see SQL queries, or `Logging__Console__FormatterName: json` for JSON output.
+
 ## Development without Docker
 
 The API also runs on the host with the .NET 10 SDK, using the Docker database:
