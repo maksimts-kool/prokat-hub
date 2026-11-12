@@ -84,3 +84,14 @@ public sealed record ItemListQuery : IValidatableObject
         }
     }
 }
+
+/// <summary>Body of <c>POST /api/items</c> and <c>PUT /api/items/{id}</c>.</summary>
+public sealed record ItemRequest(
+    [Required, Range(1, int.MaxValue)] int? CategoryId,
+    [Required, StringLength(150, MinimumLength = 2)] string Name,
+    [Required, StringLength(80)] string Brand,
+    [Required, StringLength(2000)] string Description,
+    [Url, StringLength(500)] string? ImageUrl,
+    [Required, Range(typeof(decimal), "0.01", "100000", ParseLimitsInInvariantCulture = true)] decimal? DailyPrice,
+    [Required, Range(typeof(decimal), "0", "1000000", ParseLimitsInInvariantCulture = true)] decimal? Deposit,
+    [Required, Range(typeof(decimal), "0", "100000", ParseLimitsInInvariantCulture = true)] decimal? LateFeePerDay);

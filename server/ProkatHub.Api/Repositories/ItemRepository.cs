@@ -51,6 +51,15 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
             .Include(i => i.Category)
             .FirstOrDefaultAsync(i => i.Id == id && i.IsActive, cancellationToken);
 
+    public Task<Item?> GetForUpdateAsync(int id, CancellationToken cancellationToken = default) =>
+        db.Items
+            .Include(i => i.Category)
+            .FirstOrDefaultAsync(i => i.Id == id && i.IsActive, cancellationToken);
+
+    public void Add(Item item) => db.Items.Add(item);
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default) => db.SaveChangesAsync(cancellationToken);
+
     // Every order ends with Id so that paging is stable when the main key ties.
     private static IQueryable<Item> Sort(IQueryable<Item> items, string sort) => sort switch
     {
