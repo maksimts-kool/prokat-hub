@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace ProkatHub.Api.Dtos;
 
 /// <summary>An inclusive range of rental days in the query string, e.g. <c>?from=2026-12-01&amp;to=2026-12-03</c>.</summary>
-public sealed record DateRangeQuery : IValidatableObject
+public record DateRangeQuery : IValidatableObject
 {
     /// <summary>Longest range that can be asked for at once.</summary>
     public const int MaxDays = 366;

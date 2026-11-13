@@ -59,6 +59,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
+builder.Services.AddScoped<IDiscountTierRepository, DiscountTierRepository>();
 builder.Services.AddSingleton<IPricingService, PricingService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IItemService, ItemService>();

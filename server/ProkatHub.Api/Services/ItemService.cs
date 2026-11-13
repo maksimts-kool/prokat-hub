@@ -72,22 +72,8 @@ public sealed class ItemService(
     public async Task<ItemAvailabilityDto> GetAvailabilityAsync(
         int id, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
     {
-        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
-        if (from < today)
-        {
-            throw new RequestValidationException(new Dictionary<string, string[]>
-            {
-                [nameof(DateRangeQuery.From)] = [$"From must not be in the past (today is {today:yyyy-MM-dd})."],
-            });
-        }
-
-        if (from > to)
-        {
-            throw new RequestValidationException(new Dictionary<string, string[]>
-            {
-                [nameof(DateRangeQuery.From)] = ["From must not be after To."],
-            });
-        }
+        var today = RentalDateRange.Today(timeProvider);
+        RentalDateRange.EnsureBookable(from, to, today);
 
         _ = await items.GetByIdAsync(id, cancellationToken) ?? throw NotFound(id);
 

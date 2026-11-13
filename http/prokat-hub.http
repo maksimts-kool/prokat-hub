@@ -55,6 +55,18 @@ GET {{baseUrl}}/api/items/1/availability?from={{to}}&to={{from}}
 ### Availability for a range in the past → 400 ValidationProblemDetails
 GET {{baseUrl}}/api/items/1/availability?from=2020-01-01&to=2020-01-05
 
+### Rental quote: days, daily price, subtotal, discount, deposit and total
+GET {{baseUrl}}/api/rentals/quote?itemId=1&from={{from}}&to={{to}}
+
+### Rental quote for one day → no discount
+GET {{baseUrl}}/api/rentals/quote?itemId=1&from={{from}}&to={{from}}
+
+### Rental quote without itemId → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/rentals/quote?from={{from}}&to={{to}}
+
+### Rental quote for an unknown item → 404 ProblemDetails
+GET {{baseUrl}}/api/rentals/quote?itemId=99999&from={{from}}&to={{to}}
+
 ### Register a new customer → 201
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
