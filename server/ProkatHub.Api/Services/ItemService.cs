@@ -1,6 +1,7 @@
 using ProkatHub.Api.Domain;
 using ProkatHub.Api.Dtos;
 using ProkatHub.Api.Infrastructure;
+using ProkatHub.Api.Mapping;
 using ProkatHub.Api.Repositories;
 
 namespace ProkatHub.Api.Services;
@@ -15,7 +16,7 @@ public sealed class ItemService(
     public async Task<PagedResult<ItemSummaryDto>> GetPageAsync(ItemListQuery query, CancellationToken cancellationToken = default)
     {
         var (page, totalCount) = await items.GetPageAsync(query, cancellationToken);
-        return new PagedResult<ItemSummaryDto>(page.Select(ToSummary).ToList(), query.Page, query.PageSize, totalCount);
+        return new PagedResult<ItemSummaryDto>(page.Select(CatalogueMapper.ToSummaryDto).ToList(), query.Page, query.PageSize, totalCount);
     }
 
     public async Task<ItemDetailsDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -23,7 +24,7 @@ public sealed class ItemService(
         var item = await items.GetByIdAsync(id, cancellationToken)
             ?? throw NotFound(id);
 
-        return ToDetails(item);
+        return item.ToDetailsDto();
     }
 
     public async Task<ItemDetailsDto> CreateAsync(ItemRequest request, CancellationToken cancellationToken = default)
@@ -41,7 +42,7 @@ public sealed class ItemService(
         await items.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created item {ItemId} in category {CategoryId}", item.Id, item.CategoryId);
 
-        return ToDetails(item);
+        return item.ToDetailsDto();
     }
 
     public async Task<ItemDetailsDto> UpdateAsync(int id, ItemRequest request, CancellationToken cancellationToken = default)
@@ -52,7 +53,7 @@ public sealed class ItemService(
         await items.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Updated item {ItemId}", id);
 
-        return ToDetails(item);
+        return item.ToDetailsDto();
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -87,7 +88,7 @@ public sealed class ItemService(
 
     private async Task ApplyAsync(Item item, ItemRequest request, CancellationToken cancellationToken)
     {
-        // [Required] on the request guarantees these values once model validation has passed.
+        // ItemRequestValidator guarantees these values before the service is called.
         var categoryId = request.CategoryId!.Value;
         if (item.CategoryId != categoryId)
         {
@@ -109,12 +110,4 @@ public sealed class ItemService(
     }
 
     private static NotFoundException NotFound(int id) => new($"Item {id} was not found.");
-
-    private static ItemDetailsDto ToDetails(Item item) => new(
-        item.Id, item.Name, item.Brand, item.Description, item.CategoryId, item.Category.Name,
-        item.DailyPrice, item.Deposit, item.LateFeePerDay, item.ImageUrl);
-
-    private static ItemSummaryDto ToSummary(Item item) => new(
-        item.Id, item.Name, item.Brand, item.CategoryId, item.Category.Name,
-        item.DailyPrice, item.Deposit, item.ImageUrl);
 }

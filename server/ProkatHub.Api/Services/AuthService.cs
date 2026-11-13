@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using ProkatHub.Api.Domain;
 using ProkatHub.Api.Dtos;
 using ProkatHub.Api.Infrastructure;
+using ProkatHub.Api.Mapping;
 
 namespace ProkatHub.Api.Services;
 
@@ -63,7 +64,7 @@ public sealed class AuthService(
         var user = await userManager.FindByIdAsync(userId.ToString())
             ?? throw new NotFoundException("The user no longer exists.");
         var roles = await userManager.GetRolesAsync(user);
-        return new UserDto(user.Id, user.Email ?? string.Empty, user.FullName, roles.ToList());
+        return user.ToDto(roles.ToList());
     }
 
     private static Dictionary<string, string[]> ToValidationErrors(IEnumerable<IdentityError> errors) =>

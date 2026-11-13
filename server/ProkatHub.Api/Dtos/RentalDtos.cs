@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using ProkatHub.Api.Domain;
 
 namespace ProkatHub.Api.Dtos;
@@ -20,11 +19,10 @@ public sealed record RentalDto(
     DateTimeOffset CreatedAt);
 
 /// <summary>Query of <c>GET /api/rentals/quote</c>, e.g. <c>?itemId=1&amp;from=2026-12-01&amp;to=2026-12-07</c>.</summary>
+/// <remarks>Rules: <see cref="Validation.RentalQuoteQueryValidator"/>.</remarks>
 public sealed record RentalQuoteQuery : DateRangeQuery
 {
     /// <summary>Item to price.</summary>
-    [Required]
-    [Range(1, int.MaxValue)]
     public int? ItemId { get; init; }
 }
 

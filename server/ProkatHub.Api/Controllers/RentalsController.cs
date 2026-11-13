@@ -33,6 +33,6 @@ public sealed class RentalsController(IRentalService rentals) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<RentalQuoteDto>> GetQuote(
         [FromQuery] RentalQuoteQuery query, CancellationToken cancellationToken) =>
-        // [Required] on the query guarantees all three values once model validation has passed.
+        // RentalQuoteQueryValidator guarantees all three values before the action runs.
         Ok(await rentals.GetQuoteAsync(query.ItemId!.Value, query.From!.Value, query.To!.Value, cancellationToken));
 }

@@ -2,6 +2,7 @@ using System.Text;
 using ProkatHub.Api.Domain;
 using ProkatHub.Api.Dtos;
 using ProkatHub.Api.Infrastructure;
+using ProkatHub.Api.Mapping;
 using ProkatHub.Api.Repositories;
 
 namespace ProkatHub.Api.Services;
@@ -11,11 +12,11 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
     public async Task<IReadOnlyList<CategoryDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var all = await categories.GetAllAsync(cancellationToken);
-        return all.Select(ToDto).ToList();
+        return all.Select(CatalogueMapper.ToDto).ToList();
     }
 
     public async Task<CategoryDto> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
-        ToDto(await FindAsync(id, cancellationToken));
+        (await FindAsync(id, cancellationToken)).ToDto();
 
     public async Task<CategoryDto> CreateAsync(CategoryRequest request, CancellationToken cancellationToken = default)
     {
@@ -26,7 +27,7 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
         await categories.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created category {CategoryId} ({Slug})", category.Id, category.Slug);
 
-        return ToDto(category);
+        return category.ToDto();
     }
 
     public async Task<CategoryDto> UpdateAsync(int id, CategoryRequest request, CancellationToken cancellationToken = default)
@@ -37,7 +38,7 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
         await categories.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Updated category {CategoryId}", id);
 
-        return ToDto(category);
+        return category.ToDto();
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
@@ -104,6 +105,4 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
 
         return (name, slug, description);
     }
-
-    private static CategoryDto ToDto(Category c) => new(c.Id, c.Name, c.Slug, c.Description);
 }

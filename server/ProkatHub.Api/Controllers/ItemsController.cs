@@ -37,7 +37,7 @@ public sealed class ItemsController(IItemService items) : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ItemAvailabilityDto>> GetAvailability(
         int id, [FromQuery] DateRangeQuery query, CancellationToken cancellationToken) =>
-        // [Required] on the query guarantees both dates once model validation has passed.
+        // DateRangeQueryValidator guarantees both dates before the action runs.
         Ok(await items.GetAvailabilityAsync(id, query.From!.Value, query.To!.Value, cancellationToken));
 
     /// <summary>Adds an item to the catalogue (Admin).</summary>

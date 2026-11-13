@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace ProkatHub.Api.Dtos;
 
 public sealed record ItemSummaryDto(
@@ -39,28 +37,23 @@ public static class ItemSort
 }
 
 /// <summary>Query string of <c>GET /api/items</c>.</summary>
-public sealed record ItemListQuery : IValidatableObject
+/// <remarks>Rules: <see cref="Validation.ItemListQueryValidator"/>.</remarks>
+public sealed record ItemListQuery
 {
     /// <summary>Case-insensitive text matched against name, brand and description.</summary>
-    [StringLength(100)]
     public string? Search { get; init; }
 
-    [Range(1, int.MaxValue)]
     public int? CategoryId { get; init; }
 
-    [Range(typeof(decimal), "0", "1000000")]
     public decimal? MinPrice { get; init; }
 
-    [Range(typeof(decimal), "0", "1000000")]
     public decimal? MaxPrice { get; init; }
 
     /// <summary>One of <c>name</c> (default), <c>name_desc</c>, <c>price</c>, <c>price_desc</c>, <c>popularity</c>.</summary>
     public string? Sort { get; init; }
 
-    [Range(1, int.MaxValue)]
     public int Page { get; init; } = 1;
 
-    [Range(1, 100)]
     public int PageSize { get; init; } = 12;
 
     /// <summary>The sort order in lower case, or <see cref="ItemSort.Name"/> when none was given.</summary>
@@ -68,30 +61,16 @@ public sealed record ItemListQuery : IValidatableObject
 
     /// <summary>The search text without surrounding spaces, or null when it is blank.</summary>
     public string? NormalizedSearch => string.IsNullOrWhiteSpace(Search) ? null : Search.Trim();
-
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        if (!ItemSort.All.Contains(NormalizedSort))
-        {
-            yield return new ValidationResult(
-                $"Sort must be one of: {string.Join(", ", ItemSort.All)}.", [nameof(Sort)]);
-        }
-
-        if (MinPrice is { } min && MaxPrice is { } max && min > max)
-        {
-            yield return new ValidationResult(
-                "MinPrice must not be greater than MaxPrice.", [nameof(MinPrice), nameof(MaxPrice)]);
-        }
-    }
 }
 
 /// <summary>Body of <c>POST /api/items</c> and <c>PUT /api/items/{id}</c>.</summary>
+/// <remarks>Rules: <see cref="Validation.ItemRequestValidator"/>.</remarks>
 public sealed record ItemRequest(
-    [Required, Range(1, int.MaxValue)] int? CategoryId,
-    [Required, StringLength(150, MinimumLength = 2)] string Name,
-    [Required, StringLength(80)] string Brand,
-    [Required, StringLength(2000)] string Description,
-    [Url, StringLength(500)] string? ImageUrl,
-    [Required, Range(typeof(decimal), "0.01", "100000", ParseLimitsInInvariantCulture = true)] decimal? DailyPrice,
-    [Required, Range(typeof(decimal), "0", "1000000", ParseLimitsInInvariantCulture = true)] decimal? Deposit,
-    [Required, Range(typeof(decimal), "0", "100000", ParseLimitsInInvariantCulture = true)] decimal? LateFeePerDay);
+    int? CategoryId,
+    string Name,
+    string Brand,
+    string Description,
+    string? ImageUrl,
+    decimal? DailyPrice,
+    decimal? Deposit,
+    decimal? LateFeePerDay);

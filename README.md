@@ -59,7 +59,7 @@ In Swagger, call `POST /api/auth/login`, copy `accessToken`, click **Authorize**
 docker compose logs -f api
 ```
 
-The API writes one line per request with method, path, status, duration, user id and trace id. The trace id is the same as `traceId` in error responses, so a failed call in the browser can be matched with its log line. `/health`, Swagger and OpenAPI requests are logged at Debug and hidden by default. Change log levels with environment variables in `compose.yaml`, for example `Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Information` to see SQL queries, or `Logging__Console__FormatterName: json` for JSON output.
+The API logs through [Serilog](https://serilog.net/) and writes one line per request with method, path, status, duration, user id and trace id. The trace id is the same as `traceId` in error responses, so a failed call in the browser can be matched with its log line. `/health`, Swagger and OpenAPI requests are logged at Debug and hidden by default. Levels and the output format live in the `Serilog` section of `appsettings.json`. Override them with environment variables in `compose.yaml`, for example `Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore.Database.Command: Information` to see SQL queries.
 
 ## Development without Docker
 

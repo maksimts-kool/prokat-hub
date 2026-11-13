@@ -1,4 +1,6 @@
 using System.Text;
+using FluentValidation;
+using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +12,19 @@ using ProkatHub.Api.Domain;
 using ProkatHub.Api.Infrastructure;
 using ProkatHub.Api.Repositories;
 using ProkatHub.Api.Services;
+using ProkatHub.Api.Validation;
+using Serilog;
 
 const string ClientCorsPolicy = "Client";
 
 var builder = WebApplication.CreateBuilder(args);
+
+// --- Logging ---
+// Serilog replaces the default console logger; levels and output come from the "Serilog" section.
+builder.Services.AddSerilog((services, logger) => logger
+    .ReadFrom.Configuration(builder.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 // --- Database & Identity ---
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -71,7 +82,14 @@ builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOpt
 builder.Services.AddScoped<DatabaseInitializer>();
 
 // --- Web API ---
-builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+// Request rules live in FluentValidation validators (Validation/), run by FluentValidationFilter.
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<FluentValidationFilter>();
+    // Non-nullable strings are not implicitly [Required]; the validators decide what is required.
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+}).ConfigureApiBehaviorOptions(options =>
 {
     // Log which fields failed automatic model validation; the response itself stays the default 400.
     var createResponse = options.InvalidModelStateResponseFactory;
@@ -90,8 +108,11 @@ builder.Services.AddProblemDetails(options =>
         context.ProblemDetails.Instance ??= $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}");
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+builder.Services.AddFluentValidationRulesToOpenApi();
 builder.Services.AddOpenApi(options =>
 {
+    // Copies validator rules (required, lengths, ranges, patterns) into the OpenAPI schemas.
+    options.AddFluentValidationRules();
     options.AddDocumentTransformer<BearerSecurityTransformer>();
     options.AddOperationTransformer<BearerSecurityTransformer>();
 });
@@ -114,7 +135,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 // First in the pipeline so it sees the final status code, including errors turned into ProblemDetails.
-app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseSerilogRequestLogging(RequestLogging.Configure);
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
