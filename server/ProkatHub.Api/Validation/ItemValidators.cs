@@ -15,7 +15,7 @@ public sealed class ItemListQueryValidator : AbstractValidator<ItemListQuery>
         RuleFor(x => x.MaxPrice).InclusiveBetween(0m, PriceLimit);
 
         RuleFor(x => x.Sort)
-            .Must((query, _) => ItemSort.All.Contains(query.NormalizedSort))
+            .Must((query, _) => ItemSort.All.Contains(query.NormalizedSort()))
             .WithMessage($"Sort must be one of: {string.Join(", ", ItemSort.All)}.");
 
         RuleFor(x => x.MinPrice)

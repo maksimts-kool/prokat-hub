@@ -14,8 +14,8 @@ public class ItemListQueryValidatorTests
         var query = new ItemListQuery();
 
         _validator.TestValidate(query).ShouldNotHaveAnyValidationErrors();
-        Assert.Equal(ItemSort.Name, query.NormalizedSort);
-        Assert.Null(query.NormalizedSearch);
+        Assert.Equal(ItemSort.Name, query.NormalizedSort());
+        Assert.Null(query.NormalizedSearch());
     }
 
     [Theory]
@@ -58,7 +58,7 @@ public class ItemListQueryValidatorTests
     [Fact]
     public void Blank_search_is_ignored_and_text_is_trimmed()
     {
-        Assert.Null(new ItemListQuery { Search = "   " }.NormalizedSearch);
-        Assert.Equal("sony a7", new ItemListQuery { Search = "  sony a7 " }.NormalizedSearch);
+        Assert.Null(new ItemListQuery { Search = "   " }.NormalizedSearch());
+        Assert.Equal("sony a7", new ItemListQuery { Search = "  sony a7 " }.NormalizedSearch());
     }
 }

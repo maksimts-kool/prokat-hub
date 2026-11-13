@@ -12,7 +12,7 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
     {
         var items = db.Items.AsNoTracking().Where(i => i.IsActive);
 
-        if (query.NormalizedSearch is { } search)
+        if (query.NormalizedSearch() is { } search)
         {
             var pattern = $"%{EscapeLikePattern(search)}%";
             items = items.Where(i =>
@@ -37,7 +37,7 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
         }
 
         var totalCount = await items.CountAsync(cancellationToken);
-        var page = await Sort(items, query.NormalizedSort)
+        var page = await Sort(items, query.NormalizedSort())
             .Include(i => i.Category)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)

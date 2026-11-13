@@ -56,11 +56,13 @@ public sealed record ItemListQuery
 
     public int PageSize { get; init; } = 12;
 
+    // Methods rather than properties, so they don't show up as query parameters in the OpenAPI document.
+
     /// <summary>The sort order in lower case, or <see cref="ItemSort.Name"/> when none was given.</summary>
-    public string NormalizedSort => string.IsNullOrWhiteSpace(Sort) ? ItemSort.Name : Sort.Trim().ToLowerInvariant();
+    public string NormalizedSort() => string.IsNullOrWhiteSpace(Sort) ? ItemSort.Name : Sort.Trim().ToLowerInvariant();
 
     /// <summary>The search text without surrounding spaces, or null when it is blank.</summary>
-    public string? NormalizedSearch => string.IsNullOrWhiteSpace(Search) ? null : Search.Trim();
+    public string? NormalizedSearch() => string.IsNullOrWhiteSpace(Search) ? null : Search.Trim();
 }
 
 /// <summary>Body of <c>POST /api/items</c> and <c>PUT /api/items/{id}</c>.</summary>
