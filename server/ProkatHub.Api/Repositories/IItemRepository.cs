@@ -10,4 +10,11 @@ public interface IItemRepository
 
     /// <summary>An active item with its category, or null.</summary>
     Task<Item?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>A tracked active item with its category, for changes; or null.</summary>
+    Task<Item?> GetForUpdateAsync(int id, CancellationToken cancellationToken = default);
+
+    void Add(Item item);
+
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

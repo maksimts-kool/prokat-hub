@@ -7,6 +7,11 @@
 @customerPassword = Customer12345
 @staffEmail = staff@prokathub.test
 @staffPassword = Staff12345
+@adminEmail = admin@prokathub.test
+@adminPassword = Admin12345
+# Change these to dates from today onwards before running the availability requests.
+@from = 2026-12-01
+@to = 2026-12-14
 
 ### Health check
 GET {{baseUrl}}/health
@@ -17,11 +22,50 @@ GET {{baseUrl}}/api/categories
 ### Item catalogue, page 1
 GET {{baseUrl}}/api/items?page=1&pageSize=12
 
+### Search by name, brand or description
+GET {{baseUrl}}/api/items?search=sony
+
+### Cameras, most expensive first
+GET {{baseUrl}}/api/items?categoryId=1&sort=price_desc
+
+### Daily price between 20 € and 40 €, cheapest first
+GET {{baseUrl}}/api/items?minPrice=20&maxPrice=40&sort=price
+
+### Most rented items first
+GET {{baseUrl}}/api/items?sort=popularity&pageSize=5
+
+### Unknown sort value → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items?sort=rating
+
+### minPrice above maxPrice → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items?minPrice=50&maxPrice=10
+
 ### One item
 GET {{baseUrl}}/api/items/1
 
 ### Unknown item → 404 ProblemDetails
 GET {{baseUrl}}/api/items/99999
+
+### Availability of an item for a date range
+GET {{baseUrl}}/api/items/1/availability?from={{from}}&to={{to}}
+
+### Availability with from after to → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items/1/availability?from={{to}}&to={{from}}
+
+### Availability for a range in the past → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items/1/availability?from=2020-01-01&to=2020-01-05
+
+### Rental quote: days, daily price, subtotal, discount, deposit and total
+GET {{baseUrl}}/api/rentals/quote?itemId=1&from={{from}}&to={{to}}
+
+### Rental quote for one day → no discount
+GET {{baseUrl}}/api/rentals/quote?itemId=1&from={{from}}&to={{from}}
+
+### Rental quote without itemId → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/rentals/quote?from={{from}}&to={{to}}
+
+### Rental quote for an unknown item → 404 ProblemDetails
+GET {{baseUrl}}/api/rentals/quote?itemId=99999&from={{from}}&to={{to}}
 
 ### Register a new customer → 201
 POST {{baseUrl}}/api/auth/register
@@ -76,3 +120,124 @@ Content-Type: application/json
 ### My rentals with a Staff token → 403
 GET {{baseUrl}}/api/rentals/mine
 Authorization: Bearer {{staffLogin.response.body.accessToken}}
+
+### Log in as admin
+# @name adminLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### Create a category (Admin) → 201 with Location; the slug is made from the name
+# @name newCategory
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "name": "3D Printers",
+  "description": "FDM and resin printers."
+}
+
+### Create a category with a name in use → 409
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Cameras"
+}
+
+### Create a category as customer → 403
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Printers"
+}
+
+### Rename a category (Admin)
+PUT {{baseUrl}}/api/categories/{{newCategory.response.body.id}}
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "name": "3D Printers",
+  "slug": "3d-printers",
+  "description": "FDM and resin printers, filament included."
+}
+
+### Create an item (Admin) → 201 with Location
+# @name newItem
+POST {{baseUrl}}/api/items
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "categoryId": {{newCategory.response.body.id}},
+  "name": "Bambu Lab P1S",
+  "brand": "Bambu Lab",
+  "description": "Enclosed 3D printer for PLA, PETG and ABS.",
+  "imageUrl": "https://placehold.co/640x480/png?text=Bambu%20Lab%20P1S",
+  "dailyPrice": 25,
+  "deposit": 400,
+  "lateFeePerDay": 37.5
+}
+
+### Create an item with invalid fields → 400 ValidationProblemDetails
+POST {{baseUrl}}/api/items
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "categoryId": 99999,
+  "name": "X",
+  "dailyPrice": 0
+}
+
+### Update an item (Admin)
+PUT {{baseUrl}}/api/items/{{newItem.response.body.id}}
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "categoryId": {{newCategory.response.body.id}},
+  "name": "Bambu Lab P1S Combo",
+  "brand": "Bambu Lab",
+  "description": "Enclosed 3D printer with the AMS for multi-colour prints.",
+  "imageUrl": null,
+  "dailyPrice": 30,
+  "deposit": 450,
+  "lateFeePerDay": 45
+}
+
+### Delete a category that still has items → 409
+DELETE {{baseUrl}}/api/categories/{{newCategory.response.body.id}}
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+
+### Retire an item (Admin) → 204; it leaves the catalogue but stays in rental history
+DELETE {{baseUrl}}/api/items/{{newItem.response.body.id}}
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+
+### Retire an item with open rentals → 409
+DELETE {{baseUrl}}/api/items/1
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+
+### Unknown item → 404
+PUT {{baseUrl}}/api/items/99999
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "categoryId": 1,
+  "name": "Nothing",
+  "brand": "None",
+  "description": "Does not exist.",
+  "dailyPrice": 10,
+  "deposit": 0,
+  "lateFeePerDay": 0
+}

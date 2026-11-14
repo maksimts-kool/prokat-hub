@@ -12,10 +12,33 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
     {
         var items = db.Items.AsNoTracking().Where(i => i.IsActive);
 
+        if (query.NormalizedSearch() is { } search)
+        {
+            var pattern = $"%{EscapeLikePattern(search)}%";
+            items = items.Where(i =>
+                EF.Functions.ILike(i.Name, pattern, @"\") ||
+                EF.Functions.ILike(i.Brand, pattern, @"\") ||
+                EF.Functions.ILike(i.Description, pattern, @"\"));
+        }
+
+        if (query.CategoryId is { } categoryId)
+        {
+            items = items.Where(i => i.CategoryId == categoryId);
+        }
+
+        if (query.MinPrice is { } minPrice)
+        {
+            items = items.Where(i => i.DailyPrice >= minPrice);
+        }
+
+        if (query.MaxPrice is { } maxPrice)
+        {
+            items = items.Where(i => i.DailyPrice <= maxPrice);
+        }
+
         var totalCount = await items.CountAsync(cancellationToken);
-        var page = await items
+        var page = await Sort(items, query.NormalizedSort())
             .Include(i => i.Category)
-            .OrderBy(i => i.Name).ThenBy(i => i.Id)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
@@ -27,4 +50,28 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
         db.Items.AsNoTracking()
             .Include(i => i.Category)
             .FirstOrDefaultAsync(i => i.Id == id && i.IsActive, cancellationToken);
+
+    public Task<Item?> GetForUpdateAsync(int id, CancellationToken cancellationToken = default) =>
+        db.Items
+            .Include(i => i.Category)
+            .FirstOrDefaultAsync(i => i.Id == id && i.IsActive, cancellationToken);
+
+    public void Add(Item item) => db.Items.Add(item);
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default) => db.SaveChangesAsync(cancellationToken);
+
+    // Every order ends with Id so that paging is stable when the main key ties.
+    private static IQueryable<Item> Sort(IQueryable<Item> items, string sort) => sort switch
+    {
+        ItemSort.NameDesc => items.OrderByDescending(i => i.Name).ThenBy(i => i.Id),
+        ItemSort.Price => items.OrderBy(i => i.DailyPrice).ThenBy(i => i.Name).ThenBy(i => i.Id),
+        ItemSort.PriceDesc => items.OrderByDescending(i => i.DailyPrice).ThenBy(i => i.Name).ThenBy(i => i.Id),
+        ItemSort.Popularity => items
+            .OrderByDescending(i => i.Rentals.Count(r => r.Status != RentalStatus.Cancelled))
+            .ThenBy(i => i.Name).ThenBy(i => i.Id),
+        _ => items.OrderBy(i => i.Name).ThenBy(i => i.Id),
+    };
+
+    private static string EscapeLikePattern(string value) =>
+        value.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
 }

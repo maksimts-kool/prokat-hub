@@ -13,6 +13,10 @@
 - Lucide React + Sonner
 - Recharts (if charts are needed)
 - SignalR JavaScript client
+### New
+- react-i18next
+- Playwright (idk if useful) (optional)
+- Lighthouse (idk if useful) (optional)
 
 ## Backend
 - ASP.NET Core 10 Web API (C#)
@@ -22,6 +26,15 @@
 - OpenAPI + Swagger UI
 - ProblemDetails + ILogger
 - Separate .NET Worker Service + HttpClient
+### New
+- FluentValidation
+- Mapperly
+- Swashbuckle
+- Serilog
+
+## Background Worker
+- PeriodicTimer (inside BackgroundService)
+- Polly
 
 ## Database, testing and tools
 - PostgreSQL
@@ -30,5 +43,10 @@
 - Docker Compose
 - pnpm + ESLint + Prettier
 - GitHub + GitHub Projects + GitHub Actions
+### New
+- actions/setup-dotnet + actions/setup-node: build and test steps in CI
+- crazy-max/ghaction-github-labeler: keeps the required labels in a file in the repo (idk if useful)
+- Shouldly (idk if useful)
+- Testcontainers (idk if useful) (optional)
 
 **Client scope:** One responsive website for desktop, tablet, and mobile browsers; no separate mobile app planned.

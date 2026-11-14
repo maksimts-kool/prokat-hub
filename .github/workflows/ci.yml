@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or PR cancels the run that is still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: Server (.NET build + test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore server/ProkatHub.slnx
+
+      - name: Build
+        run: dotnet build server/ProkatHub.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: >-
+          dotnet test server/ProkatHub.slnx --configuration Release --no-build
+          --logger "trx;LogFileName=results.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: ignore
+
+  client:
+    name: Client (lint + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs the pnpm version pinned in client/package.json ("packageManager").
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: client/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Build
+        run: pnpm build
+
+      # Runs Vitest as soon as client/package.json gets a "test" script; skipped until then.
+      - name: Test
+        run: pnpm run --if-present test
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # compose.yaml requires these variables; the example values are fine for a build.
+      - name: Create .env
+        run: cp .env.example .env
+
+      - name: Validate compose.yaml
+        run: docker compose config --quiet
+
+      - name: Build dev images (api, web)
+        run: docker compose build
+
+      - name: Build production API image
+        run: docker compose build api
+        env:
+          API_BUILD_TARGET: final
