@@ -1,5 +1,6 @@
 import { ChevronRight, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 interface PageHeaderProps {
@@ -10,6 +11,8 @@ interface PageHeaderProps {
 
 /** Banner at the top of an inner page: icon, title, breadcrumb and an optional description. */
 export function PageHeader({ title, description, icon: Icon }: PageHeaderProps) {
+  const { t } = useTranslation()
+
   return (
     <section className="relative isolate mb-10 overflow-hidden rounded-2xl bg-accent px-6 py-12 text-center sm:py-16">
       {/* Soft brand-coloured shapes behind the text. */}
@@ -30,11 +33,11 @@ export function PageHeader({ title, description, icon: Icon }: PageHeaderProps) 
 
       <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
 
-      <nav aria-label="Breadcrumb" className="mt-3">
+      <nav aria-label={t('layout.breadcrumb')} className="mt-3">
         <ol className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
           <li>
             <Link to="/" className="transition-colors hover:text-primary">
-              Home
+              {t('nav.home')}
             </Link>
           </li>
           <li aria-hidden>

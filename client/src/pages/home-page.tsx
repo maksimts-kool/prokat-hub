@@ -1,13 +1,16 @@
 import { ArrowRight, CircleCheck, CircleX, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import i18n from '@/i18n'
 import { API_URL, apiUrl } from '@/lib/config'
 
 type ApiStatus = 'checking' | 'online' | 'offline'
 
 export function HomePage() {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<ApiStatus>('checking')
 
   useEffect(() => {
@@ -22,7 +25,8 @@ export function HomePage() {
       .catch((error: unknown) => {
         if (ignore) return
         setStatus('offline')
-        toast.error('Cannot reach the API', { description: String(error) })
+        // The global i18n.t keeps `t` out of the deps, so a language switch doesn't re-run the check.
+        toast.error(i18n.t('home.apiUnreachable'), { description: String(error) })
       })
     return () => {
       ignore = true
@@ -33,14 +37,12 @@ export function HomePage() {
     <section className="space-y-8">
       <div className="space-y-5 rounded-2xl bg-primary px-6 py-12 text-primary-foreground sm:px-12 sm:py-16">
         <h1 className="max-w-xl text-3xl font-bold tracking-tight sm:text-5xl">
-          Rent cameras, drones, laptops and more
+          {t('home.title')}
         </h1>
-        <p className="max-w-lg text-primary-foreground/80 sm:text-lg">
-          Pick your dates, see the price with longer-rental discounts and book in a minute.
-        </p>
+        <p className="max-w-lg text-primary-foreground/80 sm:text-lg">{t('home.lead')}</p>
         <Button asChild variant="highlight" size="lg" className="px-5">
           <Link to="/catalogue">
-            Browse the catalogue
+            {t('home.browse')}
             <ArrowRight aria-hidden />
           </Link>
         </Button>
@@ -50,7 +52,7 @@ export function HomePage() {
         {status === 'checking' && <Loader2 className="size-4 animate-spin" aria-hidden />}
         {status === 'online' && <CircleCheck className="size-4 text-green-600" aria-hidden />}
         {status === 'offline' && <CircleX className="size-4 text-destructive" aria-hidden />}
-        API {status} at <code>{API_URL}</code>
+        {t(`home.apiStatus.${status}`)} <code>{API_URL}</code>
       </p>
     </section>
   )

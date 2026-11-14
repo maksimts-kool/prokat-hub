@@ -1,12 +1,9 @@
 import { LogIn } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page-header'
 
 export function LoginPage() {
-  return (
-    <PageHeader
-      icon={LogIn}
-      title="Log in"
-      description="Login and registration are built in #23."
-    />
-  )
+  const { t } = useTranslation()
+
+  return <PageHeader icon={LogIn} title={t('login.title')} description={t('login.placeholder')} />
 }

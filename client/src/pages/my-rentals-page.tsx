@@ -1,12 +1,15 @@
 import { CalendarCheck } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page-header'
 
 export function MyRentalsPage() {
+  const { t } = useTranslation()
+
   return (
     <PageHeader
       icon={CalendarCheck}
-      title="My rentals"
-      description="Your bookings will be listed here (#30)."
+      title={t('rentals.title')}
+      description={t('rentals.placeholder')}
     />
   )
 }

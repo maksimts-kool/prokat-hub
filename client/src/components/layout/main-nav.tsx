@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NavLink, useLocation } from 'react-router'
 import { navItems } from '@/components/layout/nav-items'
 import { cn } from '@/lib/utils'
@@ -10,6 +11,7 @@ interface Indicator {
 
 /** Desktop menu: a purple pill slides under the active link. */
 export function MainNav() {
+  const { t, i18n } = useTranslation()
   const { pathname } = useLocation()
   const navRef = useRef<HTMLElement>(null)
   const [indicator, setIndicator] = useState<Indicator | null>(null)
@@ -34,12 +36,13 @@ export function MainNav() {
       observer.disconnect()
       clearTimeout(timer)
     }
-  }, [pathname])
+    // The language is a dependency because translated labels change the link widths.
+  }, [pathname, i18n.resolvedLanguage])
 
   return (
     <nav
       ref={navRef}
-      aria-label="Main"
+      aria-label={t('layout.mainNav')}
       className="relative ml-auto hidden items-center gap-1 rounded-full border bg-muted p-1 md:flex"
     >
       <span
@@ -60,13 +63,14 @@ export function MainNav() {
           end={item.to === '/'}
           className={({ isActive }) =>
             cn(
-              'relative z-10 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300',
+              'relative z-10 flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-300 lg:px-4',
               isActive ? 'text-primary-foreground' : 'text-foreground/70 hover:text-primary',
             )
           }
         >
-          <item.icon className="size-4" aria-hidden />
-          {item.label}
+          {/* Icons only from lg up, so longer Estonian labels fit at md widths. */}
+          <item.icon className="hidden size-4 lg:block" aria-hidden />
+          {t(`nav.${item.labelKey}`)}
         </NavLink>
       ))}
     </nav>
