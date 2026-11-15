@@ -100,12 +100,54 @@ Content-Type: application/json
 GET {{baseUrl}}/api/auth/me
 Authorization: Bearer {{customerLogin.response.body.accessToken}}
 
+### Book an item (Customer) → 201 with the rental; the price is calculated on the server
+POST {{baseUrl}}/api/rentals
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "itemId": 2,
+  "from": "{{from}}",
+  "to": "{{to}}"
+}
+
+### Book the same item for overlapping days → 409 ProblemDetails
+POST {{baseUrl}}/api/rentals
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "itemId": 2,
+  "from": "{{to}}",
+  "to": "{{to}}"
+}
+
+### Book without dates → 400 ValidationProblemDetails
+POST {{baseUrl}}/api/rentals
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "itemId": 2
+}
+
+### Book an unknown item → 404 ProblemDetails
+POST {{baseUrl}}/api/rentals
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "itemId": 99999,
+  "from": "{{from}}",
+  "to": "{{to}}"
+}
+
 ### My rentals (Customer) → 200
-GET {{baseUrl}}/api/rentals/mine
+GET {{baseUrl}}/api/rentals/my
 Authorization: Bearer {{customerLogin.response.body.accessToken}}
 
 ### My rentals without a token → 401
-GET {{baseUrl}}/api/rentals/mine
+GET {{baseUrl}}/api/rentals/my
 
 ### Log in as staff
 # @name staffLogin
@@ -118,7 +160,7 @@ Content-Type: application/json
 }
 
 ### My rentals with a Staff token → 403
-GET {{baseUrl}}/api/rentals/mine
+GET {{baseUrl}}/api/rentals/my
 Authorization: Bearer {{staffLogin.response.body.accessToken}}
 
 ### Log in as admin

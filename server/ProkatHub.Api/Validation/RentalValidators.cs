@@ -11,3 +11,12 @@ public sealed class RentalQuoteQueryValidator : DateRangeQueryValidatorBase<Rent
         RuleFor(x => x.ItemId).NotNull().GreaterThan(0);
     }
 }
+
+/// <summary>The date range rules plus a required, positive item id.</summary>
+public sealed class CreateRentalRequestValidator : DateRangeQueryValidatorBase<CreateRentalRequest>
+{
+    public CreateRentalRequestValidator()
+    {
+        RuleFor(x => x.ItemId).NotNull().GreaterThan(0);
+    }
+}

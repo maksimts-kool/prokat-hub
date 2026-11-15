@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using ProkatHub.Api.Data;
 using ProkatHub.Api.Domain;
 
@@ -27,4 +28,11 @@ public sealed class RentalRepository(AppDbContext db) : IRentalRepository
                  r.Status == RentalStatus.Issued || r.Status == RentalStatus.Overdue))
             .OrderBy(r => r.StartDate).ThenBy(r => r.Id)
             .ToListAsync(cancellationToken);
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+        db.Database.BeginTransactionAsync(cancellationToken);
+
+    public void Add(Rental rental) => db.Rentals.Add(rental);
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default) => db.SaveChangesAsync(cancellationToken);
 }

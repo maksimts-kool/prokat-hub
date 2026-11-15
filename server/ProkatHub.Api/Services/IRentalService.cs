@@ -10,4 +10,14 @@ public interface IRentalService
     /// <exception cref="Infrastructure.NotFoundException">The item does not exist or is retired.</exception>
     /// <exception cref="Infrastructure.RequestValidationException">The range is invalid or starts in the past.</exception>
     Task<RentalQuoteDto> GetQuoteAsync(int itemId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Books an item for a customer at the price <see cref="IPricingService"/> calculates. The availability check
+    /// and the insert run in one transaction that holds a lock on the item, so the item cannot be booked twice.
+    /// </summary>
+    /// <exception cref="Infrastructure.NotFoundException">The item does not exist or is retired.</exception>
+    /// <exception cref="Infrastructure.RequestValidationException">The range is invalid or starts in the past.</exception>
+    /// <exception cref="Infrastructure.ConflictException">A Booked, Issued or Overdue rental takes one of the days.</exception>
+    Task<RentalDto> CreateAsync(
+        Guid customerId, int itemId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }

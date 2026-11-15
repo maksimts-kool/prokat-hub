@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using ProkatHub.Api.Domain;
 
 namespace ProkatHub.Api.Repositories;
@@ -17,4 +18,11 @@ public interface IRentalRepository
     /// </summary>
     Task<IReadOnlyList<Rental>> GetBlockingAsync(
         int itemId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Starts a database transaction. Disposing it without committing rolls it back.</summary>
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+    void Add(Rental rental);
+
+    Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

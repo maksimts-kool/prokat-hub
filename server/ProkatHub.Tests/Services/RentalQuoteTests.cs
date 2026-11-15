@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using ProkatHub.Api.Domain;
 using ProkatHub.Api.Infrastructure;
@@ -19,7 +20,8 @@ public class RentalQuoteTests
     {
         _service = new RentalService(
             Substitute.For<IRentalRepository>(), _items, _tiers, new PricingService(),
-            new FixedTimeProvider(new DateTimeOffset(Today.ToDateTime(new TimeOnly(15, 0)), TimeSpan.Zero)));
+            new FixedTimeProvider(new DateTimeOffset(Today.ToDateTime(new TimeOnly(15, 0)), TimeSpan.Zero)),
+            NullLogger<RentalService>.Instance);
 
         _items.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(new Item
         {

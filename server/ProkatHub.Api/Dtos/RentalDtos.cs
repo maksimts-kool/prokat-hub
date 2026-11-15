@@ -18,6 +18,17 @@ public sealed record RentalDto(
     decimal LateFeeTotal,
     DateTimeOffset CreatedAt);
 
+/// <summary>Body of <c>POST /api/rentals</c>: the item and the days to book, e.g. <c>{ "itemId": 1, "from": "2026-12-01", "to": "2026-12-07" }</c>.</summary>
+/// <remarks>
+/// Uses the same field names as the quote, so a client can book exactly what it priced.
+/// The price is always calculated on the server. Rules: <see cref="Validation.CreateRentalRequestValidator"/>.
+/// </remarks>
+public sealed record CreateRentalRequest : DateRangeQuery
+{
+    /// <summary>Item to book.</summary>
+    public int? ItemId { get; init; }
+}
+
 /// <summary>Query of <c>GET /api/rentals/quote</c>, e.g. <c>?itemId=1&amp;from=2026-12-01&amp;to=2026-12-07</c>.</summary>
 /// <remarks>Rules: <see cref="Validation.RentalQuoteQueryValidator"/>.</remarks>
 public sealed record RentalQuoteQuery : DateRangeQuery

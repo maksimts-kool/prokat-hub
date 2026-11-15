@@ -56,6 +56,11 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
             .Include(i => i.Category)
             .FirstOrDefaultAsync(i => i.Id == id && i.IsActive, cancellationToken);
 
+    public Task<Item?> GetForBookingAsync(int id, CancellationToken cancellationToken = default) =>
+        db.Items
+            .FromSql($"""SELECT * FROM "Items" WHERE "Id" = {id} AND "IsActive" FOR UPDATE""")
+            .FirstOrDefaultAsync(cancellationToken);
+
     public void Add(Item item) => db.Items.Add(item);
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default) => db.SaveChangesAsync(cancellationToken);

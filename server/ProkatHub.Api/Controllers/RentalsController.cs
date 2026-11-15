@@ -12,8 +12,30 @@ namespace ProkatHub.Api.Controllers;
 [Produces("application/json")]
 public sealed class RentalsController(IRentalService rentals) : ControllerBase
 {
+    /// <summary>Books an item for the signed-in customer (Customer).</summary>
+    /// <remarks>
+    /// The price, discount and deposit are calculated on the server, as in <c>GET /api/rentals/quote</c>.
+    /// Returns 409 when a Booked, Issued or Overdue rental already takes any of the days.
+    /// An item that is out past its end date stays taken until today.
+    /// </remarks>
+    [HttpPost]
+    [Authorize(Policy = Policies.Customer)]
+    [ProducesResponseType<RentalDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<RentalDto>> Create(CreateRentalRequest request, CancellationToken cancellationToken)
+    {
+        // CreateRentalRequestValidator guarantees all three values before the action runs.
+        var rental = await rentals.CreateAsync(
+            User.GetUserId(), request.ItemId!.Value, request.From!.Value, request.To!.Value, cancellationToken);
+        return StatusCode(StatusCodes.Status201Created, rental);
+    }
+
     /// <summary>The signed-in customer's rentals, newest first.</summary>
-    [HttpGet("mine")]
+    [HttpGet("my")]
     [Authorize(Policy = Policies.Customer)]
     [ProducesResponseType<IReadOnlyList<RentalDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
