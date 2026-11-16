@@ -46,8 +46,8 @@ public sealed class RentalService(
         var item = await items.GetForBookingAsync(itemId, cancellationToken) ?? throw ItemNotFound(itemId);
 
         var taken = (await rentals.GetBlockingAsync(itemId, from, to, cancellationToken))
+            .Where(r => r.TakesAnyDay(from, to, today))
             .Select(r => (r.StartDate, EndDate: r.BlockedUntil(today)))
-            .Where(r => r.StartDate <= to && r.EndDate >= from)
             .ToList();
         if (taken.Count > 0)
         {
@@ -84,6 +84,88 @@ public sealed class RentalService(
 
         logger.LogInformation("Customer {CustomerId} booked item {ItemId} from {From} to {To} as rental {RentalId}",
             customerId, itemId, from, to, rental.Id);
+
+        return rental.ToDto();
+    }
+
+    public async Task<PagedResult<StaffRentalDto>> GetPageAsync(
+        RentalListQuery query, CancellationToken cancellationToken = default)
+    {
+        var (page, totalCount) = await rentals.GetPageAsync(query, cancellationToken);
+        return new PagedResult<StaffRentalDto>(
+            page.Select(RentalMapper.ToStaffDto).ToList(), query.Page, query.PageSize, totalCount);
+    }
+
+    public async Task<RentalDto> ChangeStatusAsync(
+        int rentalId, RentalStatus status, string? note, Guid userId, RentalActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        var now = timeProvider.GetUtcNow();
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
+
+        await using var transaction = await rentals.BeginTransactionAsync(cancellationToken);
+        var rental = await rentals.GetForStatusChangeAsync(rentalId, cancellationToken);
+
+        // Another customer's rental looks the same as a missing one, so ids can't be probed.
+        if (rental is null || (actor == RentalActor.Customer && rental.CustomerId != userId))
+        {
+            throw new NotFoundException($"Rental {rentalId} was not found.");
+        }
+
+        var from = rental.Status;
+        var allowed = RentalStatusRules.AllowedActors(from, status);
+        if (allowed == RentalActor.None)
+        {
+            throw new ConflictException($"Rental {rentalId} is {from} and can't be changed to {status}.");
+        }
+
+        if (!RentalStatusRules.CanChange(from, status, actor))
+        {
+            throw new ForbiddenException($"Only staff can change a rental from {from} to {status}.");
+        }
+
+        switch (status)
+        {
+            case RentalStatus.Issued:
+                if (today < rental.StartDate)
+                {
+                    throw new ConflictException(
+                        $"Rental {rentalId} starts on {rental.StartDate:yyyy-MM-dd} and can't be issued before then.");
+                }
+
+                if (today > rental.EndDate)
+                {
+                    throw new ConflictException(
+                        $"Rental {rentalId} ended on {rental.EndDate:yyyy-MM-dd} without being picked up; cancel it instead.");
+                }
+
+                rental.IssuedAt = now;
+                break;
+
+            case RentalStatus.Returned:
+                // The overdue process charges late days hourly; this adds the days it hasn't charged yet,
+                // up to and including the day of return, so the fee is final.
+                rental.ChargeLateDays(today, now);
+                rental.ReturnedAt = now;
+                break;
+        }
+
+        rental.Status = status;
+        rental.StatusHistory.Add(new RentalStatusHistory
+        {
+            RentalId = rental.Id,
+            FromStatus = from,
+            ToStatus = status,
+            ChangedAt = now,
+            ChangedById = userId,
+            Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
+        });
+
+        await rentals.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        logger.LogInformation("User {UserId} changed rental {RentalId} from {FromStatus} to {ToStatus}",
+            userId, rentalId, from, status);
 
         return rental.ToDto();
     }

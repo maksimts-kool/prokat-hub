@@ -56,3 +56,54 @@ public sealed record RentalQuoteDto(
     decimal DiscountAmount,
     decimal Deposit,
     decimal TotalPrice);
+
+/// <summary>Body of <c>PATCH /api/rentals/{id}/status</c>, e.g. <c>{ "status": "Issued", "note": "Serial checked" }</c>.</summary>
+/// <remarks>Rules: <see cref="Validation.ChangeRentalStatusRequestValidator"/>; allowed changes: <see cref="RentalStatusRules"/>.</remarks>
+public sealed record ChangeRentalStatusRequest
+{
+    /// <summary>New status: <c>Issued</c> or <c>Returned</c> (staff), or <c>Cancelled</c> (customer or staff).</summary>
+    public RentalStatus? Status { get; init; }
+
+    /// <summary>Optional note saved in the status history, e.g. the condition of a returned item.</summary>
+    public string? Note { get; init; }
+}
+
+/// <summary>Query string of <c>GET /api/rentals</c>, e.g. <c>?status=Issued&amp;status=Overdue&amp;page=1</c>.</summary>
+/// <remarks>Rules: <see cref="Validation.RentalListQueryValidator"/>.</remarks>
+public sealed record RentalListQuery
+{
+    /// <summary>Only rentals in one of these statuses. Repeat the parameter for several; leave it out for all.</summary>
+    public RentalStatus[]? Status { get; init; }
+
+    /// <summary>Only rentals that end on or after this day.</summary>
+    public DateOnly? From { get; init; }
+
+    /// <summary>Only rentals that start on or before this day.</summary>
+    public DateOnly? To { get; init; }
+
+    public int Page { get; init; } = 1;
+
+    public int PageSize { get; init; } = 20;
+}
+
+/// <summary>A rental as staff see it: the customer's rental plus who booked it and when it was issued and returned.</summary>
+public sealed record StaffRentalDto(
+    int Id,
+    int ItemId,
+    string ItemName,
+    string? ItemImageUrl,
+    Guid CustomerId,
+    string CustomerFullName,
+    string? CustomerEmail,
+    DateOnly StartDate,
+    DateOnly EndDate,
+    int Days,
+    RentalStatus Status,
+    decimal DailyPrice,
+    decimal DiscountPercent,
+    decimal TotalPrice,
+    decimal Deposit,
+    decimal LateFeeTotal,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? IssuedAt,
+    DateTimeOffset? ReturnedAt);

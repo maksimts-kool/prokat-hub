@@ -31,6 +31,12 @@ public sealed class UnauthorizedException(string message) : AppException(message
     public override string Title => "Unauthorized";
 }
 
+public sealed class ForbiddenException(string message) : AppException(message)
+{
+    public override int StatusCode => StatusCodes.Status403Forbidden;
+    public override string Title => "Forbidden";
+}
+
 /// <summary>Field-level validation errors, returned as ValidationProblemDetails.</summary>
 public sealed class RequestValidationException(IDictionary<string, string[]> errors)
     : AppException("One or more validation errors occurred.")

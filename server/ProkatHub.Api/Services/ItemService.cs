@@ -79,8 +79,8 @@ public sealed class ItemService(
         _ = await items.GetByIdAsync(id, cancellationToken) ?? throw NotFound(id);
 
         var booked = (await rentals.GetBlockingAsync(id, from, to, cancellationToken))
+            .Where(r => r.TakesAnyDay(from, to, today))
             .Select(r => new BookedRangeDto(r.StartDate, r.BlockedUntil(today)))
-            .Where(r => r.StartDate <= to && r.EndDate >= from)
             .ToList();
 
         return new ItemAvailabilityDto(id, from, to, booked.Count == 0, booked);

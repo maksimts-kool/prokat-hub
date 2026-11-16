@@ -101,6 +101,7 @@ GET {{baseUrl}}/api/auth/me
 Authorization: Bearer {{customerLogin.response.body.accessToken}}
 
 ### Book an item (Customer) → 201 with the rental; the price is calculated on the server
+# @name newRental
 POST {{baseUrl}}/api/rentals
 Authorization: Bearer {{customerLogin.response.body.accessToken}}
 Content-Type: application/json
@@ -162,6 +163,90 @@ Content-Type: application/json
 ### My rentals with a Staff token → 403
 GET {{baseUrl}}/api/rentals/my
 Authorization: Bearer {{staffLogin.response.body.accessToken}}
+
+### All rentals (Staff) → 200, one page, newest first
+GET {{baseUrl}}/api/rentals?page=1&pageSize=20
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+
+### Rentals at the desk: Issued or Overdue
+GET {{baseUrl}}/api/rentals?status=Issued&status=Overdue
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+
+### Booked rentals that cover some day of a range
+GET {{baseUrl}}/api/rentals?status=Booked&from={{from}}&to={{to}}
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+
+### Unknown status filter → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/rentals?status=Lost
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+
+### All rentals with a Customer token → 403
+GET {{baseUrl}}/api/rentals
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+
+### Customer tries to issue their own rental → 403 ProblemDetails (staff only)
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "status": "Issued"
+}
+
+### Staff issues a rental before its start date → 409 ProblemDetails
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "status": "Issued"
+}
+
+### Booked → Returned is not a valid change → 409 ProblemDetails
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "status": "Returned"
+}
+
+### Status missing → 400 ValidationProblemDetails
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "note": "No status"
+}
+
+### Unknown rental → 404 ProblemDetails
+PATCH {{baseUrl}}/api/rentals/99999/status
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "status": "Cancelled"
+}
+
+### Customer cancels their booking → 200 with status Cancelled
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "status": "Cancelled",
+  "note": "Plans changed"
+}
+
+### Cancel it again → 409 ProblemDetails
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "status": "Cancelled"
+}
 
 ### Log in as admin
 # @name adminLogin

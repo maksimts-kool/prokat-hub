@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProkatHub.Api.Auth;
+using ProkatHub.Api.Domain;
 using ProkatHub.Api.Dtos;
 using ProkatHub.Api.Infrastructure;
 using ProkatHub.Api.Services;
@@ -12,6 +13,46 @@ namespace ProkatHub.Api.Controllers;
 [Produces("application/json")]
 public sealed class RentalsController(IRentalService rentals) : ControllerBase
 {
+    /// <summary>All rentals for the staff desk, newest start date first (Staff, Admin).</summary>
+    /// <remarks>
+    /// Filter by status with <c>?status=Issued&amp;status=Overdue</c>, and by the days a rental covers with
+    /// <c>from</c> and <c>to</c>: a rental is listed when any of its days falls in that range.
+    /// </remarks>
+    [HttpGet]
+    [Authorize(Policy = Policies.StaffDesk)]
+    [ProducesResponseType<PagedResult<StaffRentalDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<PagedResult<StaffRentalDto>>> GetPage(
+        [FromQuery] RentalListQuery query, CancellationToken cancellationToken) =>
+        Ok(await rentals.GetPageAsync(query, cancellationToken));
+
+    /// <summary>Changes a rental's status (Customer, Staff, Admin).</summary>
+    /// <remarks>
+    /// Allowed changes: Booked → Issued (staff, from the start date to the end date), Booked → Cancelled
+    /// (the customer who booked it, or staff), Issued → Returned and Overdue → Returned (staff).
+    /// Returning an item after its end date charges each late day at the rental's late fee, up to the day of return.
+    /// Any other change is a 409; a change allowed only for staff is a 403 for customers.
+    /// Every change is saved in the status history with the time and the user.
+    /// </remarks>
+    [HttpPatch("{id:int}/status")]
+    [Authorize(Policy = Policies.RentalStatusChange)]
+    [ProducesResponseType<RentalDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<RentalDto>> ChangeStatus(
+        int id, ChangeRentalStatusRequest request, CancellationToken cancellationToken)
+    {
+        var actor = User.IsInRole(Roles.Staff) || User.IsInRole(Roles.Admin) ? RentalActor.Staff : RentalActor.Customer;
+        // ChangeRentalStatusRequestValidator guarantees the status before the action runs.
+        return Ok(await rentals.ChangeStatusAsync(
+            id, request.Status!.Value, request.Note, User.GetUserId(), actor, cancellationToken));
+    }
+
     /// <summary>Books an item for the signed-in customer (Customer).</summary>
     /// <remarks>
     /// The price, discount and deposit are calculated on the server, as in <c>GET /api/rentals/quote</c>.

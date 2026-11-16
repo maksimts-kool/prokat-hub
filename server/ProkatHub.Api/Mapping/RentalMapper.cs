@@ -16,6 +16,13 @@ public static partial class RentalMapper
     [MapProperty(nameof(Rental.LateFees), nameof(RentalDto.LateFeeTotal), Use = nameof(SumLateFees))]
     public static partial RentalDto ToDto(this Rental rental);
 
+    /// <remarks>
+    /// Like <see cref="ToDto(Rental)"/>, and <c>CustomerFullName</c> and <c>CustomerEmail</c> are flattened
+    /// from <c>Rental.Customer</c>, so it must be loaded too.
+    /// </remarks>
+    [MapProperty(nameof(Rental.LateFees), nameof(StaffRentalDto.LateFeeTotal), Use = nameof(SumLateFees))]
+    public static partial StaffRentalDto ToStaffDto(this Rental rental);
+
     /// <summary>A price breakdown plus the item and dates it was calculated for.</summary>
     public static partial RentalQuoteDto ToDto(this RentalQuote quote, int itemId, string itemName, DateOnly from, DateOnly to);
 

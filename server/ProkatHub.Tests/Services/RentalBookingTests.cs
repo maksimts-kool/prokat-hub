@@ -146,6 +146,41 @@ public class RentalBookingTests
     }
 
     [Fact]
+    public async Task Booking_that_ends_the_day_before_another_rental_starts_is_allowed()
+    {
+        GivenBlocking(Rental(RentalStatus.Booked, 5, 8));
+
+        await _service.CreateAsync(CustomerId, 1, Today.AddDays(2), Today.AddDays(4));
+
+        _rentals.Received(1).Add(Arg.Any<Rental>());
+    }
+
+    [Theory]
+    [InlineData(4, 5)] // inside the existing rental
+    [InlineData(2, 9)] // around the existing rental
+    [InlineData(3, 3)] // its first day only
+    public async Task Contained_or_containing_range_is_a_conflict(int from, int to)
+    {
+        GivenBlocking(Rental(RentalStatus.Booked, 3, 6));
+
+        await Assert.ThrowsAsync<ConflictException>(
+            () => _service.CreateAsync(CustomerId, 1, Today.AddDays(from), Today.AddDays(to)));
+        _rentals.DidNotReceive().Add(Arg.Any<Rental>());
+    }
+
+    [Theory]
+    [InlineData(RentalStatus.Cancelled)]
+    [InlineData(RentalStatus.Returned)]
+    public async Task Cancelled_and_returned_rentals_do_not_block_the_same_days(RentalStatus status)
+    {
+        GivenBlocking(Rental(status, 3, 6));
+
+        await _service.CreateAsync(CustomerId, 1, Today.AddDays(3), Today.AddDays(6));
+
+        _rentals.Received(1).Add(Arg.Is<Rental>(r => r.StartDate == Today.AddDays(3)));
+    }
+
+    [Fact]
     public async Task Overdue_item_blocks_today_but_not_tomorrow()
     {
         GivenBlocking(Rental(RentalStatus.Overdue, -6, -2));
