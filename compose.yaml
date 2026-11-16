@@ -51,5 +51,33 @@ services:
         - action: rebuild
           path: ./server/ProkatHub.Api/ProkatHub.Api.csproj
 
+  web:
+    build:
+      context: ./client
+      target: dev
+    depends_on:
+      - api
+    environment:
+      # The browser calls the API directly, so this is the API address as seen from the host.
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    develop:
+      watch:
+        # Source changes are copied into the container and picked up by Vite's hot reload.
+        - action: sync
+          path: ./client
+          target: /app
+          ignore:
+            - node_modules/
+            - dist/
+            - package.json
+            - pnpm-lock.yaml
+        # New packages need a fresh install, so rebuild the image.
+        - action: rebuild
+          path: ./client/package.json
+        - action: rebuild
+          path: ./client/pnpm-lock.yaml
+
 volumes:
   db-data:

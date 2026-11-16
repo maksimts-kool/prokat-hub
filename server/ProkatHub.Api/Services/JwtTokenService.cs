@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using ProkatHub.Api.Auth;
 using ProkatHub.Api.Domain;
 using ProkatHub.Api.Dtos;
+using ProkatHub.Api.Mapping;
 
 namespace ProkatHub.Api.Services;
 
@@ -40,6 +41,6 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider t
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)), SecurityAlgorithms.HmacSha256),
         });
 
-        return new AuthResponse(token, expiresAt, new UserDto(user.Id, user.Email ?? string.Empty, user.FullName, roles));
+        return new AuthResponse(token, expiresAt, user.ToDto(roles));
     }
 }
