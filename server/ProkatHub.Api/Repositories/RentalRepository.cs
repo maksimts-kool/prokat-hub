@@ -50,6 +50,16 @@ public sealed class RentalRepository(AppDbContext db) : IRentalRepository
         return (page, totalCount);
     }
 
+    public async Task<IReadOnlyList<Rental>> GetOverdueAsync(DateOnly today, CancellationToken cancellationToken = default) =>
+        await db.Rentals.AsNoTracking()
+            .Where(r => (r.Status == RentalStatus.Issued || r.Status == RentalStatus.Overdue) && r.EndDate < today)
+            .OrderBy(r => r.EndDate).ThenBy(r => r.Id)
+            .Include(r => r.Item)
+            .Include(r => r.Customer)
+            .Include(r => r.LateFees)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+
     public async Task<Rental?> GetForStatusChangeAsync(int id, CancellationToken cancellationToken = default)
     {
         var rental = await db.Rentals

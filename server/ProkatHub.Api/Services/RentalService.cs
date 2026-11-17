@@ -170,5 +170,59 @@ public sealed class RentalService(
         return rental.ToDto();
     }
 
+    public async Task<IReadOnlyList<StaffRentalDto>> GetOverdueAsync(CancellationToken cancellationToken = default)
+    {
+        var overdue = await rentals.GetOverdueAsync(RentalDateRange.Today(timeProvider), cancellationToken);
+        return overdue.Select(RentalMapper.ToStaffDto).ToList();
+    }
+
+    public async Task<RentalDto> MarkLateAsync(int rentalId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var now = timeProvider.GetUtcNow();
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
+
+        // The row lock and the unique (RentalId, ChargeDate) index keep two concurrent calls from charging a day twice.
+        await using var transaction = await rentals.BeginTransactionAsync(cancellationToken);
+        var rental = await rentals.GetForStatusChangeAsync(rentalId, cancellationToken)
+            ?? throw new NotFoundException($"Rental {rentalId} was not found.");
+
+        if (rental.Status is not (RentalStatus.Issued or RentalStatus.Overdue))
+        {
+            throw new ConflictException(
+                $"Rental {rentalId} is {rental.Status}; only Issued or Overdue rentals can be marked late.");
+        }
+
+        if (rental.EndDate >= today)
+        {
+            throw new ConflictException(
+                $"Rental {rentalId} ends on {rental.EndDate:yyyy-MM-dd} and is not late yet.");
+        }
+
+        var from = rental.Status;
+        if (from == RentalStatus.Issued)
+        {
+            rental.Status = RentalStatus.Overdue;
+            rental.StatusHistory.Add(new RentalStatusHistory
+            {
+                RentalId = rental.Id,
+                FromStatus = from,
+                ToStatus = RentalStatus.Overdue,
+                ChangedAt = now,
+                ChangedById = userId,
+            });
+        }
+
+        var added = rental.ChargeLateDays(today, now);
+
+        await rentals.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        logger.LogInformation(
+            "User {UserId} marked rental {RentalId} late ({FromStatus} → Overdue): {AddedDays} new late days, {LateDays} in total",
+            userId, rentalId, from, added.Count, rental.LateFees.Count);
+
+        return rental.ToDto();
+    }
+
     private static NotFoundException ItemNotFound(int itemId) => new($"Item {itemId} was not found.");
 }
