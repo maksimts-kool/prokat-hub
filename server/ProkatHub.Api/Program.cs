@@ -1,4 +1,6 @@
+using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using MicroElements.AspNetCore.OpenApi.FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,6 +18,10 @@ using ProkatHub.Api.Validation;
 using Serilog;
 
 const string ClientCorsPolicy = "Client";
+
+// Debug builds start the app under the OpenAPI document generator only to read its endpoints (see the .csproj).
+// It has no database or secrets, so startup checks and seeding are skipped there.
+var isGeneratingOpenApiDocument = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,10 +47,13 @@ builder.Services
     .AddEntityFrameworkStores<AppDbContext>();
 
 // --- Authentication & authorization ---
-builder.Services.AddOptions<JwtOptions>()
+var jwtOptions = builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+    .ValidateDataAnnotations();
+if (!isGeneratingOpenApiDocument)
+{
+    jwtOptions.ValidateOnStart();
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
@@ -89,7 +98,11 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<FluentValidationFilter>();
     // Non-nullable strings are not implicitly [Required]; the validators decide what is required.
     options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
-}).ConfigureApiBehaviorOptions(options =>
+}).AddJsonOptions(options =>
+    // Numbers are numbers in requests too (the web default also accepts "12"), so the OpenAPI document and the
+    // generated client type them as plain numbers instead of number | string.
+    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict
+).ConfigureApiBehaviorOptions(options =>
 {
     // Log which fields failed automatic model validation; the response itself stays the default 400.
     var createResponse = options.InvalidModelStateResponseFactory;
@@ -108,6 +121,9 @@ builder.Services.AddProblemDetails(options =>
         context.ProblemDetails.Instance ??= $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}");
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+// The OpenAPI schemas are built from these options, so they match the controllers' JSON settings above.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 builder.Services.AddFluentValidationRulesToOpenApi();
 builder.Services.AddOpenApi(options =>
 {
@@ -128,8 +144,9 @@ builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>("database");
 
 var app = builder.Build();
 
-await using (var scope = app.Services.CreateAsyncScope())
+if (!isGeneratingOpenApiDocument)
 {
+    await using var scope = app.Services.CreateAsyncScope();
     var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
     await initializer.InitializeAsync(app.Configuration.GetValue<bool>("Database:MigrateOnStartup"));
 }
