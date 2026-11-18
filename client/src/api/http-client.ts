@@ -29,6 +29,18 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError
 }
 
+const unauthorizedListeners = new Set<() => void>()
+
+/**
+ * Calls `listener` when a request sent with the user's token gets 401 Unauthorized.
+ * The auth context uses it to end the session and send the user to the login page.
+ * Returns a function that unsubscribes.
+ */
+export function onUnauthorized(listener: () => void): () => void {
+  unauthorizedListeners.add(listener)
+  return () => unauthorizedListeners.delete(listener)
+}
+
 async function readBody(response: Response): Promise<unknown> {
   // 204 and other empty responses have no body to parse.
   const text = await response.text()
@@ -61,6 +73,12 @@ export async function apiFetch<T>(url: string, options: RequestInit = {}): Promi
       throw error
     }
     throw new ApiError(0, undefined, 'The server could not be reached.')
+  }
+
+  // A 401 on a request that carried a token means the session is gone (expired or revoked).
+  // A 401 without one is an answer to that request, e.g. a wrong password on login.
+  if (response.status === 401 && headers.has('Authorization')) {
+    unauthorizedListeners.forEach((listener) => listener())
   }
 
   const body = await readBody(response)

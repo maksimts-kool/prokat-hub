@@ -53,6 +53,22 @@ markLate.mutate({ id: rental.id })
 
 Every request goes through `apiFetch` in `src/api/http-client.ts`. It prefixes `VITE_API_URL`, adds `Authorization: Bearer <token>` from the token stored by `src/lib/auth-token.ts`, and throws an `ApiError` (with the response's `ProblemDetails`) for non-2xx responses. The shared `QueryClient` is in `src/api/query-client.ts`; the React Query devtools appear in development only.
 
+## Sign-in and roles
+
+`src/auth/` holds the signed-in user. `AuthProvider` (mounted at the top of the router) keeps the JWT from login or register in localStorage, loads the user with `GET /api/auth/me` after a reload and drops an expired token. Use `useAuth()` for `user`, `status`, `hasRole(...)`, `signIn` and `signOut`.
+
+| Route                 | Who                                  |
+| --------------------- | ------------------------------------ |
+| `/`, `/catalogue`     | Everyone                             |
+| `/login`, `/register` | Guests (signed-in users are sent on) |
+| `/rentals`            | Customer                             |
+| `/desk`               | Staff, Admin                         |
+| `/reports`            | Admin                                |
+
+The roles per page live in `pageRoles` (`src/auth/roles.ts`): the router guards routes with `RequireAuth` and the navigation shows only the links the user may open. A guest opening a protected page goes to `/login` and returns afterwards; a signed-in user without the role sees a "No access" page. When a request sent with the token gets 401, the session ends and the user is sent to `/login`.
+
+Forms use React Hook Form with Zod schemas that repeat the server's rules; server field errors from a 400 response are shown next to their fields.
+
 ## Configuration
 
 | Variable       | Default                 | Meaning                                          |
@@ -68,4 +84,5 @@ Every request goes through `apiFetch` in `src/api/http-client.ts`. It prefixes `
 | `src/pages/`             | One component per route                                                  |
 | `src/router.tsx`         | Route table                                                              |
 | `src/api/`               | API client: `apiFetch`, `QueryClient`, generated hooks and models        |
+| `src/auth/`              | Auth context, role list and route guards                                 |
 | `src/lib/`               | Helpers, configuration and the stored access token                       |
