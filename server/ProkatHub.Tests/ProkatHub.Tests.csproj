@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProkatHub.Api\ProkatHub.Api.csproj" />
+    <ProjectReference Include="..\ProkatHub.Worker\ProkatHub.Worker.csproj" />
   </ItemGroup>
 
 </Project>

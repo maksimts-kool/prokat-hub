@@ -51,6 +51,28 @@ services:
         - action: rebuild
           path: ./server/ProkatHub.Api/ProkatHub.Api.csproj
 
+  worker:
+    build:
+      context: ./server
+      dockerfile: ProkatHub.Worker/Dockerfile
+    depends_on:
+      # Calls that fail while the API is still starting are retried by the worker's resilience pipeline.
+      - api
+    environment:
+      DOTNET_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      Api__BaseUrl: http://api:8080
+      Api__Email: ${SERVICE_EMAIL:-service@prokathub.test}
+      Api__Password: ${SEED_SERVICE_PASSWORD:-}
+      Overdue__Interval: ${WORKER_INTERVAL:-01:00:00}
+    develop:
+      watch:
+        # The worker has no hot reload; any source change rebuilds its image.
+        - action: rebuild
+          path: ./server/ProkatHub.Worker
+          ignore:
+            - bin/
+            - obj/
+
   web:
     build:
       context: ./client
