@@ -25,6 +25,21 @@ public class CategoryServiceTests
     }
 
     [Fact]
+    public async Task List_counts_active_items_and_gives_zero_to_empty_categories()
+    {
+        _repository.GetAllAsync(Arg.Any<CancellationToken>()).Returns([
+            new Category { Id = 1, Name = "Cameras", Slug = "cameras" },
+            new Category { Id = 2, Name = "Drones", Slug = "drones" },
+        ]);
+        _repository.CountActiveItemsAsync(Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<int, int> { [1] = 5 });
+
+        var result = await _service.GetAllAsync();
+
+        Assert.Equal([5, 0], result.Select(c => c.ItemCount));
+    }
+
+    [Fact]
     public async Task Create_without_slug_uses_one_made_from_the_name()
     {
         _repository.FindDuplicatesAsync("Gaming consoles", "gaming-consoles", null, Arg.Any<CancellationToken>())
@@ -33,6 +48,7 @@ public class CategoryServiceTests
         var result = await _service.CreateAsync(new CategoryRequest(" Gaming consoles ", null, " "));
 
         Assert.Equal("gaming-consoles", result.Slug);
+        Assert.Equal(0, result.ItemCount);
         Assert.Null(result.Description);
         _repository.Received(1).Add(Arg.Is<Category>(c => c.Name == "Gaming consoles"));
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());

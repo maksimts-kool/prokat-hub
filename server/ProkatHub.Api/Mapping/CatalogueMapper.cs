@@ -9,9 +9,11 @@ namespace ProkatHub.Api.Mapping;
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
 public static partial class CatalogueMapper
 {
-    public static partial CategoryDto ToDto(this Category category);
+    /// <summary>The category with the number of its active items, which the caller counts.</summary>
+    public static partial CategoryDto ToDto(this Category category, int itemCount);
 
-    public static partial ItemSummaryDto ToSummaryDto(this Item item);
+    /// <param name="isAvailable">Whether the item is free on the dates the catalogue was asked about; null without dates.</param>
+    public static partial ItemSummaryDto ToSummaryDto(this Item item, bool? isAvailable);
 
     public static partial ItemDetailsDto ToDetailsDto(this Item item);
 }

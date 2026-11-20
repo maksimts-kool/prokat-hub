@@ -11,4 +11,6 @@ export interface CategoryDto {
   slug: string
   /** @nullable */
   description: string | null
+  /** Items of the category in the catalogue now; retired items are not counted. */
+  itemCount: number
 }

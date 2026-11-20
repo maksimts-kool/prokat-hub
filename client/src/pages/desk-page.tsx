@@ -1,4 +1,3 @@
-import { ClipboardList } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page-header'
 
@@ -6,7 +5,5 @@ import { PageHeader } from '@/components/page-header'
 export function DeskPage() {
   const { t } = useTranslation()
 
-  return (
-    <PageHeader icon={ClipboardList} title={t('desk.title')} description={t('desk.placeholder')} />
-  )
+  return <PageHeader title={t('desk.title')} description={t('desk.placeholder')} />
 }

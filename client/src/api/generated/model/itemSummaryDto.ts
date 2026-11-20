@@ -5,6 +5,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
+/**
+ * One item in the catalogue list.
+ */
 export interface ItemSummaryDto {
   id: number
   name: string
@@ -15,4 +18,10 @@ export interface ItemSummaryDto {
   deposit: number
   /** @nullable */
   imageUrl: string | null
+  /**
+   * Whether the item is free on every day of the `from`–`to` range of the request;
+   * null when the request has no dates.
+   * @nullable
+   */
+  isAvailable: boolean | null
 }

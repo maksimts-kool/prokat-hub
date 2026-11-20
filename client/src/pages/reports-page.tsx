@@ -1,4 +1,3 @@
-import { ChartColumn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page-header'
 
@@ -6,11 +5,5 @@ import { PageHeader } from '@/components/page-header'
 export function ReportsPage() {
   const { t } = useTranslation()
 
-  return (
-    <PageHeader
-      icon={ChartColumn}
-      title={t('reports.title')}
-      description={t('reports.placeholder')}
-    />
-  )
+  return <PageHeader title={t('reports.title')} description={t('reports.placeholder')} />
 }

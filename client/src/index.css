@@ -27,6 +27,15 @@
   --color-destructive: var(--destructive);
   --color-highlight: var(--highlight);
   --color-highlight-foreground: var(--highlight-foreground);
+  --color-on-highlight: var(--on-highlight);
+  --color-band: var(--band);
+  --color-band-raised: var(--band-raised);
+  --color-band-raised-2: var(--band-raised-2);
+  --color-band-line: var(--band-line);
+  --color-band-foreground: var(--band-foreground);
+  --color-band-muted: var(--band-muted);
+  --color-band-accent: var(--band-accent);
+  --color-band-accent-strong: var(--band-accent-strong);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -68,6 +77,17 @@
   --accent-foreground: #5937e0;
   --highlight: #ff9e0c;
   --highlight-foreground: #ffffff;
+  /* Text on a highlight fill (badges): #232323 on orange reads at 7.6:1, white only at 2.1:1. */
+  --on-highlight: #232323;
+  /* The band: the dark purple surface behind the hero and every PageHeader, the same in both themes. */
+  --band: #1a1333;
+  --band-raised: #261d4d;
+  --band-raised-2: #33286b;
+  --band-line: #4b3c99;
+  --band-foreground: #ffffff;
+  --band-muted: #c9bdff;
+  --band-accent: #a68bff;
+  --band-accent-strong: #7b61ff;
   --destructive: oklch(0.577 0.245 27.325);
   --border: #ebebeb;
   --input: #e2e2e2;
@@ -105,6 +125,7 @@
   --accent-foreground: #c9bdff;
   --highlight: #ff9e0c;
   --highlight-foreground: #232323;
+  --on-highlight: #232323;
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);

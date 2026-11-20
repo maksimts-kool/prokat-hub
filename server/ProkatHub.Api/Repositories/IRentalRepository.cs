@@ -39,6 +39,13 @@ public interface IRentalRepository
     Task<IReadOnlyList<Rental>> GetBlockingAsync(
         int itemId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Which of <paramref name="itemIds"/> are taken on any day from <paramref name="from"/> to <paramref name="to"/>
+    /// (both inclusive): the same rule as <see cref="Domain.RentalStatusRules.TakesAnyDay"/>, run in the database.
+    /// </summary>
+    Task<IReadOnlySet<int>> GetTakenItemIdsAsync(
+        IReadOnlyCollection<int> itemIds, DateOnly from, DateOnly to, DateOnly today, CancellationToken cancellationToken = default);
+
     /// <summary>Starts a database transaction. Disposing it without committing rolls it back.</summary>
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 

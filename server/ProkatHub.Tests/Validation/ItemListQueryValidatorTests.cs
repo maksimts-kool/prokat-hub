@@ -61,4 +61,47 @@ public class ItemListQueryValidatorTests
         Assert.Null(new ItemListQuery { Search = "   " }.NormalizedSearch());
         Assert.Equal("sony a7", new ItemListQuery { Search = "  sony a7 " }.NormalizedSearch());
     }
+
+    [Fact]
+    public void Both_dates_are_valid()
+    {
+        _validator.TestValidate(new ItemListQuery { From = new(2026, 12, 1), To = new(2026, 12, 7) })
+            .ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact]
+    public void From_without_to_is_rejected()
+    {
+        _validator.TestValidate(new ItemListQuery { From = new(2026, 12, 1) })
+            .ShouldHaveValidationErrorFor(x => x.To)
+            .WithErrorMessage("To is required when From is given.")
+            .Only();
+    }
+
+    [Fact]
+    public void To_without_from_is_rejected()
+    {
+        _validator.TestValidate(new ItemListQuery { To = new(2026, 12, 1) })
+            .ShouldHaveValidationErrorFor(x => x.From)
+            .WithErrorMessage("From is required when To is given.")
+            .Only();
+    }
+
+    [Fact]
+    public void From_after_to_is_rejected()
+    {
+        _validator.TestValidate(new ItemListQuery { From = new(2026, 12, 7), To = new(2026, 12, 1) })
+            .ShouldHaveValidationErrorFor(x => x.From)
+            .WithErrorMessage("From must not be after To.")
+            .Only();
+    }
+
+    [Fact]
+    public void Range_longer_than_the_limit_is_rejected()
+    {
+        var from = new DateOnly(2026, 12, 1);
+        _validator.TestValidate(new ItemListQuery { From = from, To = from.AddDays(DateRangeQuery.MaxDays) })
+            .ShouldHaveValidationErrorFor(x => x.To)
+            .Only();
+    }
 }

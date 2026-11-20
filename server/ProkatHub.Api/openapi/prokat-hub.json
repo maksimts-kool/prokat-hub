@@ -527,6 +527,24 @@
             }
           },
           {
+            "name": "From",
+            "in": "query",
+            "description": "First rental day (inclusive). With DateOnly? ItemListQuery.To, each item says whether it is free on those days;\nitems that are taken are still listed.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "description": "Last rental day (inclusive). Give both dates or neither.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
             "name": "Sort",
             "in": "query",
             "description": "One of `name` (default), `name_desc`, `price`, `price_desc`, `popularity`.",
@@ -1527,7 +1545,8 @@
           "id",
           "name",
           "slug",
-          "description"
+          "description",
+          "itemCount"
         ],
         "type": "object",
         "properties": {
@@ -1546,6 +1565,11 @@
               "null",
               "string"
             ]
+          },
+          "itemCount": {
+            "type": "integer",
+            "description": "Items of the category in the catalogue now; retired items are not counted.",
+            "format": "int32"
           }
         }
       },
@@ -1794,7 +1818,8 @@
           "categoryName",
           "dailyPrice",
           "deposit",
-          "imageUrl"
+          "imageUrl",
+          "isAvailable"
         ],
         "type": "object",
         "properties": {
@@ -1828,8 +1853,16 @@
               "null",
               "string"
             ]
+          },
+          "isAvailable": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Whether the item is free on every day of the `from`–`to` range of the request;\nnull when the request has no dates."
           }
-        }
+        },
+        "description": "One item in the catalogue list."
       },
       "LoginRequest": {
         "required": [

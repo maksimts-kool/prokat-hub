@@ -57,6 +57,44 @@ public class ItemServiceTests
     }
 
     [Fact]
+    public async Task Page_without_dates_leaves_availability_empty_and_does_not_check_rentals()
+    {
+        var query = new ItemListQuery();
+        _repository.GetPageAsync(query, Arg.Any<CancellationToken>()).Returns(([Camera(1)], 1));
+
+        var result = await _service.GetPageAsync(query);
+
+        Assert.Null(result.Items[0].IsAvailable);
+        await _rentals.DidNotReceiveWithAnyArgs().GetTakenItemIdsAsync(default!, default, default, default, default);
+    }
+
+    [Fact]
+    public async Task Page_with_dates_marks_the_items_taken_on_those_days()
+    {
+        var from = new DateOnly(2026, 11, 20);
+        var to = new DateOnly(2026, 11, 26);
+        var query = new ItemListQuery { From = from, To = to };
+        _repository.GetPageAsync(query, Arg.Any<CancellationToken>()).Returns(([Camera(1), Camera(2), Camera(3)], 3));
+        _rentals.GetTakenItemIdsAsync(
+                Arg.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 1, 2, 3 })),
+                from, to, new DateOnly(2026, 11, 12), Arg.Any<CancellationToken>())
+            .Returns(new HashSet<int> { 2 });
+
+        var result = await _service.GetPageAsync(query);
+
+        Assert.Equal([true, false, true], result.Items.Select(i => i.IsAvailable));
+    }
+
+    [Fact]
+    public async Task Page_with_dates_in_the_past_is_a_validation_error()
+    {
+        var query = new ItemListQuery { From = new(2026, 11, 11), To = new(2026, 11, 13) };
+
+        await Assert.ThrowsAsync<RequestValidationException>(() => _service.GetPageAsync(query));
+        await _repository.DidNotReceiveWithAnyArgs().GetPageAsync(default!, default);
+    }
+
+    [Fact]
     public async Task Missing_item_throws_not_found()
     {
         _repository.GetByIdAsync(42, Arg.Any<CancellationToken>()).Returns((Item?)null);

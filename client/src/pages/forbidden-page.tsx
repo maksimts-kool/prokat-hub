@@ -1,4 +1,3 @@
-import { ShieldX } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { PageHeader } from '@/components/page-header'
@@ -9,12 +8,8 @@ export function ForbiddenPage() {
   const { t } = useTranslation()
 
   return (
-    <div className="text-center">
-      <PageHeader
-        icon={ShieldX}
-        title={t('forbidden.title')}
-        description={t('forbidden.description')}
-      />
+    <div>
+      <PageHeader title={t('forbidden.title')} description={t('forbidden.description')} />
       <Button asChild variant="outline">
         <Link to="/">{t('forbidden.backHome')}</Link>
       </Button>

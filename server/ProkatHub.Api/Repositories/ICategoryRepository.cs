@@ -13,6 +13,12 @@ public interface ICategoryRepository
     Task<(bool NameTaken, bool SlugTaken)> FindDuplicatesAsync(
         string name, string slug, int? exceptId, CancellationToken cancellationToken = default);
 
+    /// <summary>Active items per category id. Categories without active items are left out.</summary>
+    Task<IReadOnlyDictionary<int, int>> CountActiveItemsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Active items in one category.</summary>
+    Task<int> CountActiveItemsAsync(int id, CancellationToken cancellationToken = default);
+
     /// <summary>Whether any item, active or retired, belongs to the category.</summary>
     Task<bool> HasItemsAsync(int id, CancellationToken cancellationToken = default);
 

@@ -23,6 +23,13 @@ export type GetApiItemsParams = {
    * @maximum 1000000
    */
   MaxPrice?: number
+  /**
+   * First rental day (inclusive). With DateOnly? ItemListQuery.To, each item says whether it is free on those days;
+   * items that are taken are still listed.
+   */
+  From?: string
+  /** Last rental day (inclusive). Give both dates or neither. */
+  To?: string
   /** One of `name` (default), `name_desc`, `price`, `price_desc`, `popularity`. */
   Sort?: string
   /** @minimum 1 */

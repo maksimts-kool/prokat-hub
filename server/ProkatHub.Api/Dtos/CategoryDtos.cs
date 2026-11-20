@@ -1,6 +1,7 @@
 namespace ProkatHub.Api.Dtos;
 
-public sealed record CategoryDto(int Id, string Name, string Slug, string? Description);
+/// <param name="ItemCount">Items of the category in the catalogue now; retired items are not counted.</param>
+public sealed record CategoryDto(int Id, string Name, string Slug, string? Description, int ItemCount);
 
 /// <summary>Body of <c>POST /api/categories</c> and <c>PUT /api/categories/{id}</c>.</summary>
 /// <remarks>Rules: <see cref="Validation.CategoryRequestValidator"/>.</remarks>

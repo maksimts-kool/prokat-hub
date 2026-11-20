@@ -36,6 +36,12 @@ GET {{baseUrl}}/api/items?minPrice=20&maxPrice=40&sort=price
 ### Most rented items first
 GET {{baseUrl}}/api/items?sort=popularity&pageSize=5
 
+### Catalogue for a week: each item's isAvailable says whether it is free on those days
+GET {{baseUrl}}/api/items?from=2026-12-07&to=2026-12-13
+
+### From without To → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items?from=2026-12-07
+
 ### Unknown sort value → 400 ValidationProblemDetails
 GET {{baseUrl}}/api/items?sort=rating
 
