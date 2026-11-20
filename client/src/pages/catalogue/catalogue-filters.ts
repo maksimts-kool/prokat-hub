@@ -10,7 +10,7 @@ export type CatalogueSort = (typeof catalogueSorts)[number]
 export const CATALOGUE_PAGE_SIZE = 12
 const PRICE_LIMIT = 1_000_000
 /** Longest date range the API accepts (`DateRangeQuery.MaxDays`). */
-const MAX_DAYS = 366
+export const MAX_DAYS = 366
 
 /** The catalogue's filters. They live in the URL query string, so a filtered page can be shared. */
 export interface CatalogueFilters {
@@ -50,7 +50,7 @@ function price(value: string | null): number | undefined {
     : undefined
 }
 
-function isoDate(value: string | null): string | undefined {
+export function isoDate(value: string | null): string | undefined {
   return value && /^\d{4}-\d{2}-\d{2}$/.test(value) && isValid(parseISO(value)) ? value : undefined
 }
 
@@ -98,7 +98,10 @@ export type DateRangeState =
   | { kind: 'valid'; from: string; to: string; days: number }
 
 /** Whether the chosen dates can be sent; the API answers 400 for every other case. */
-export function dateRangeState({ from, to }: CatalogueFilters, today = todayIso()): DateRangeState {
+export function dateRangeState(
+  { from, to }: Pick<CatalogueFilters, 'from' | 'to'>,
+  today = todayIso(),
+): DateRangeState {
   if (!from && !to) return { kind: 'none' }
   if (!from || !to) return { kind: 'incomplete' }
   if (from > to) return { kind: 'reversed' }

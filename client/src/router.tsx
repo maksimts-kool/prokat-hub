@@ -7,6 +7,7 @@ import { CataloguePage } from '@/pages/catalogue-page'
 import { DeskPage } from '@/pages/desk-page'
 import { ErrorPage } from '@/pages/error-page'
 import { HomePage } from '@/pages/home-page'
+import { ItemPage } from '@/pages/item-page'
 import { LoginPage } from '@/pages/login-page'
 import { MyRentalsPage } from '@/pages/my-rentals-page'
 import { NotFoundPage } from '@/pages/not-found-page'
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
           // Open to everyone.
           { index: true, element: <HomePage /> },
           { path: 'catalogue', element: <CataloguePage /> },
+          { path: 'catalogue/:id', element: <ItemPage /> },
 
           // Guests only: a signed-in user is sent on to where they were going.
           {
