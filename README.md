@@ -41,6 +41,7 @@ On startup in Development the API applies EF Core migrations and seeds the demo 
 | http://localhost:8080/swagger | Swagger UI (Development only) |
 | http://localhost:8080/openapi/v1.json | OpenAPI document |
 | http://localhost:8080/health | Health check (API + database) |
+| ws://localhost:8080/ws/availability | SignalR hub for live availability updates (signed-in users) |
 
 Seeded accounts (passwords are the `SEED_*_PASSWORD` values in `.env`):
 
@@ -78,6 +79,20 @@ cd server/ProkatHub.Worker
 dotnet user-secrets set "Api:Password" "<SEED_SERVICE_PASSWORD>"
 dotnet run
 ```
+
+### Live availability (SignalR)
+
+The SignalR hub at `/ws/availability` tells connected clients when an item's availability changes, so pages update without a refresh. Any signed-in user may connect. Browsers can't send an `Authorization` header when opening a WebSocket, so the client passes the JWT as the `access_token` query parameter (`accessTokenFactory` in `@microsoft/signalr` does this). The token is read from the query string only on `/ws` paths, and request logs show it as `access_token=***`.
+
+Clients only listen. After a change is saved the API sends `AvailabilityChanged` with `{ itemId, from, to }` (dates as `yyyy-MM-dd`, both inclusive) to every connection:
+
+| Change | `from` – `to` |
+| --- | --- |
+| Rental booked | the booked days |
+| Rental cancelled or returned | the days it held, up to today for a late return |
+| Rental marked late (`mark-late`) | the day after the end date – today; sent once a day, not on every hourly run |
+
+A client showing that item for overlapping dates should reload its availability. `RentalService` sends events through `IAvailabilityNotifier`, so its tests use a mock; a failed broadcast is logged and doesn't fail the request.
 
 ## Development without Docker
 

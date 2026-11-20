@@ -12,6 +12,7 @@ using ProkatHub.Api.Auth;
 using ProkatHub.Api.Data;
 using ProkatHub.Api.Domain;
 using ProkatHub.Api.Infrastructure;
+using ProkatHub.Api.Realtime;
 using ProkatHub.Api.Repositories;
 using ProkatHub.Api.Services;
 using ProkatHub.Api.Validation;
@@ -70,6 +71,21 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
             RoleClaimType = AuthConstants.RoleClaimType,
             ClockSkew = TimeSpan.FromMinutes(1),
         };
+        // Browsers can't send an Authorization header when opening a WebSocket, so the SignalR client puts the token
+        // in the query string instead. It is read only for hub paths; request logging hides it (RequestLogging).
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Query[AuthConstants.AccessTokenQueryParameter];
+                if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments(AuthConstants.HubPathPrefix))
+                {
+                    context.Token = token;
+                }
+
+                return Task.CompletedTask;
+            },
+        };
     });
 
 builder.Services.AddAuthorizationBuilder().AddProkatHubPolicies();
@@ -86,6 +102,10 @@ builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IRentalService, RentalService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+
+// --- Real-time updates ---
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IAvailabilityNotifier, SignalRAvailabilityNotifier>();
 
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.SectionName));
 builder.Services.AddScoped<DatabaseInitializer>();
@@ -173,5 +193,6 @@ app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 app.MapControllers();
+app.MapHub<AvailabilityHub>(AvailabilityHub.Path);
 
 app.Run();

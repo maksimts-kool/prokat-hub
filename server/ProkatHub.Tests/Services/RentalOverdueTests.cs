@@ -17,13 +17,14 @@ public class RentalOverdueTests
 
     private readonly IRentalRepository _rentals = Substitute.For<IRentalRepository>();
     private readonly IDbContextTransaction _transaction = Substitute.For<IDbContextTransaction>();
+    private readonly IAvailabilityNotifier _availability = Substitute.For<IAvailabilityNotifier>();
     private readonly RentalService _service;
 
     public RentalOverdueTests()
     {
         _service = new RentalService(
             _rentals, Substitute.For<IItemRepository>(), Substitute.For<IDiscountTierRepository>(),
-            new PricingService(), new FixedTimeProvider(Now), NullLogger<RentalService>.Instance);
+            new PricingService(), _availability, new FixedTimeProvider(Now), NullLogger<RentalService>.Instance);
 
         _rentals.BeginTransactionAsync(Arg.Any<CancellationToken>()).Returns(_transaction);
     }
@@ -52,6 +53,7 @@ public class RentalOverdueTests
     {
         await _rentals.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
         await _transaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+        await _availability.DidNotReceiveWithAnyArgs().AvailabilityChangedAsync(default, default, default);
     }
 
     [Fact]
@@ -182,5 +184,42 @@ public class RentalOverdueTests
     {
         await Assert.ThrowsAsync<NotFoundException>(() => _service.MarkLateAsync(99, ServiceId));
         await ShouldNotSave();
+    }
+
+    [Fact]
+    public async Task Mark_late_announces_the_late_days_after_it_is_committed()
+    {
+        GivenRental(RentalStatus.Issued, -3);
+
+        await _service.MarkLateAsync(5, ServiceId);
+
+        Received.InOrder(() =>
+        {
+            _transaction.CommitAsync(Arg.Any<CancellationToken>());
+            _availability.AvailabilityChangedAsync(1, Today.AddDays(-2), Today);
+        });
+    }
+
+    [Fact]
+    public async Task Mark_late_announces_a_new_late_day()
+    {
+        var rental = GivenRental(RentalStatus.Overdue, -2);
+        rental.LateFees = [new LateFee { ChargeDate = Today.AddDays(-1), Amount = 60m }];
+
+        await _service.MarkLateAsync(5, ServiceId);
+
+        await _availability.Received(1).AvailabilityChangedAsync(1, Today.AddDays(-1), Today);
+    }
+
+    [Fact]
+    public async Task Mark_late_again_on_the_same_day_announces_nothing_new()
+    {
+        GivenRental(RentalStatus.Issued, -2);
+
+        await _service.MarkLateAsync(5, ServiceId);
+        await _service.MarkLateAsync(5, ServiceId);
+
+        // The hourly process calls it every hour; only the first call that day changed anything.
+        await _availability.ReceivedWithAnyArgs(1).AvailabilityChangedAsync(default, default, default);
     }
 }

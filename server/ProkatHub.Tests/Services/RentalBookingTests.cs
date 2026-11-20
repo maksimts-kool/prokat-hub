@@ -19,12 +19,13 @@ public class RentalBookingTests
     private readonly IItemRepository _items = Substitute.For<IItemRepository>();
     private readonly IDiscountTierRepository _tiers = Substitute.For<IDiscountTierRepository>();
     private readonly IDbContextTransaction _transaction = Substitute.For<IDbContextTransaction>();
+    private readonly IAvailabilityNotifier _availability = Substitute.For<IAvailabilityNotifier>();
     private readonly RentalService _service;
 
     public RentalBookingTests()
     {
         _service = new RentalService(
-            _rentals, _items, _tiers, new PricingService(), new FixedTimeProvider(Now),
+            _rentals, _items, _tiers, new PricingService(), _availability, new FixedTimeProvider(Now),
             NullLogger<RentalService>.Instance);
 
         _rentals.BeginTransactionAsync(Arg.Any<CancellationToken>()).Returns(_transaction);
@@ -208,5 +209,28 @@ public class RentalBookingTests
 
         Assert.Contains("From", error.Errors.Keys);
         await _rentals.DidNotReceive().BeginTransactionAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Booking_announces_the_booked_days_after_it_is_committed()
+    {
+        await _service.CreateAsync(CustomerId, 1, Today.AddDays(2), Today.AddDays(5));
+
+        Received.InOrder(() =>
+        {
+            _transaction.CommitAsync(Arg.Any<CancellationToken>());
+            _availability.AvailabilityChangedAsync(1, Today.AddDays(2), Today.AddDays(5));
+        });
+    }
+
+    [Fact]
+    public async Task Rejected_booking_announces_nothing()
+    {
+        GivenBlocking(Rental(RentalStatus.Booked, 3, 6));
+
+        await Assert.ThrowsAsync<ConflictException>(
+            () => _service.CreateAsync(CustomerId, 1, Today.AddDays(4), Today.AddDays(5)));
+
+        await _availability.DidNotReceiveWithAnyArgs().AvailabilityChangedAsync(default, default, default);
     }
 }

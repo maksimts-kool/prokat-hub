@@ -11,6 +11,7 @@ public sealed class RentalService(
     IItemRepository items,
     IDiscountTierRepository discountTiers,
     IPricingService pricing,
+    IAvailabilityNotifier availability,
     TimeProvider timeProvider,
     ILogger<RentalService> logger) : IRentalService
 {
@@ -85,6 +86,8 @@ public sealed class RentalService(
         logger.LogInformation("Customer {CustomerId} booked item {ItemId} from {From} to {To} as rental {RentalId}",
             customerId, itemId, from, to, rental.Id);
 
+        await availability.AvailabilityChangedAsync(itemId, from, to);
+
         return rental.ToDto();
     }
 
@@ -113,6 +116,8 @@ public sealed class RentalService(
         }
 
         var from = rental.Status;
+        // The days the item is taken for this rental now; cancelling or returning frees them.
+        var heldUntil = rental.BlockedUntil(today);
         var allowed = RentalStatusRules.AllowedActors(from, status);
         if (allowed == RentalActor.None)
         {
@@ -167,6 +172,11 @@ public sealed class RentalService(
         logger.LogInformation("User {UserId} changed rental {RentalId} from {FromStatus} to {ToStatus}",
             userId, rentalId, from, status);
 
+        if (from.BlocksItem() && !status.BlocksItem())
+        {
+            await availability.AvailabilityChangedAsync(rental.ItemId, rental.StartDate, heldUntil);
+        }
+
         return rental.ToDto();
     }
 
@@ -220,6 +230,13 @@ public sealed class RentalService(
         logger.LogInformation(
             "User {UserId} marked rental {RentalId} late ({FromStatus} → Overdue): {AddedDays} new late days, {LateDays} in total",
             userId, rentalId, from, added.Count, rental.LateFees.Count);
+
+        // The item stays taken past the end date until it comes back. The hourly process calls this again and again,
+        // so clients only hear about it when the rental becomes Overdue or a new late day starts.
+        if (from == RentalStatus.Issued || added.Count > 0)
+        {
+            await availability.AvailabilityChangedAsync(rental.ItemId, rental.EndDate.AddDays(1), today);
+        }
 
         return rental.ToDto();
     }
