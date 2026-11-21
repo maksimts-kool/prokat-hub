@@ -130,6 +130,23 @@ export const et: Translations = {
       depositNote: '— võetakse kättesaamisel, tagastatakse eseme tagastamisel. Ei kuulu summasse.',
       lateFee: 'Hilinenud tagastus maksab {{amount}} päevas.',
     },
+    booking: {
+      book: 'Broneeri',
+      bookFor: 'Broneeri {{price}} eest',
+      logInToBook: 'Logi sisse ja broneeri',
+      guestNote: 'Enne broneerimist palutakse sul sisse logida.',
+      staffNote: 'Esemeid saab broneerida ainult kliendikontoga.',
+      summary_one: '{{count}} päev · tagatisraha {{deposit}}',
+      summary_other: '{{count}} päeva · tagatisraha {{deposit}}',
+      success: '{{item}} on broneeritud.',
+      validation: {
+        required: 'Vali algus- ja lõppkuupäev.',
+        past: 'Alguskuupäev ei saa olla minevikus. Vali teine kuupäev.',
+        endBeforeStart: 'Lõppkuupäev ei saa olla enne alguskuupäeva.',
+        tooLong_one: 'Laenutus võib kesta kuni {{count}} päev.',
+        tooLong_other: 'Laenutus võib kesta kuni {{count}} päeva.',
+      },
+    },
     discounts: {
       title: 'Pikemalt laenutades on odavam',
       text: 'Soodustus kehtib kogu laenutusele, kui see jõuab nõutud pikkuseni.',

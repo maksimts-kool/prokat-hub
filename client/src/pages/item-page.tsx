@@ -18,13 +18,16 @@ import { useGetApiItemsId, useGetApiItemsIdAvailability } from '@/api/generated/
 import type { ItemDetailsDto } from '@/api/generated/model'
 import { useGetApiRentalsQuote } from '@/api/generated/rentals/rentals'
 import { isApiError } from '@/api/http-client'
+import { BookButton, BookNote, MobileBookBar } from '@/components/booking/book-action'
 import { DateRangeCalendar } from '@/components/booking/date-range-calendar'
 import { QuoteCard } from '@/components/booking/quote-card'
+import { useBookItem } from '@/components/booking/use-book-item'
 import { categoryIcon } from '@/components/category-icon'
 import { FormAlert } from '@/components/form-alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useFormat } from '@/i18n/format'
+import { bookingDatesError } from '@/lib/booking-schema'
 import { discountRows, rowIncludes } from '@/lib/discount-tiers'
 import { cn } from '@/lib/utils'
 import { NotFoundPage } from '@/pages/not-found-page'
@@ -95,8 +98,11 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
     complete &&
     (availability.data?.bookedRanges ?? []).some((b) => from <= b.endDate && b.startDate <= to)
 
+  const booking = useBookItem(item.id, item.name)
+
   function selectRange(next: DateRange | undefined) {
     setRange(next)
+    booking.reset()
     // Complete ranges go to the URL, so the page can be shared and reloaded with them.
     setSearchParams(
       (params) => {
@@ -112,13 +118,28 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
     )
   }
 
-  const quoteError = !complete
+  // Problems with the dates themselves: the Zod rules (no past days, end not before start, not too
+  // long), then a clash. A 409 from Book reloads the booked days, so both report the same clash.
+  const datesError = !complete
     ? undefined
-    : clashes
-      ? t('errors.conflict')
-      : quote.isError
-        ? apiErrorMessage(quote.error)
-        : undefined
+    : (bookingDatesError(t, { from, to }) ??
+      (clashes || booking.conflict
+        ? t('errors.conflict')
+        : quote.isError
+          ? apiErrorMessage(quote.error)
+          : undefined))
+  // Other failed bookings (e.g. no connection) keep the dates bookable, so Book can be retried.
+  const quoteError = datesError ?? booking.error
+  // Book needs a fresh quote for the chosen dates: not while it loads, fails or the dates clash.
+  const bookBlocked =
+    !complete || datesError !== undefined || !quote.data || quote.isPlaceholderData
+  const bookProps = {
+    access: booking.access,
+    quote: complete ? quote.data : undefined,
+    blocked: bookBlocked,
+    pending: booking.pending,
+    onBook: () => booking.book({ from, to }),
+  }
   const awaitingReturn = range?.from !== undefined && !complete
   const previewDays =
     awaitingReturn && preview ? differenceInCalendarDays(preview.to, preview.from) + 1 : undefined
@@ -208,13 +229,24 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
             loading={complete && quote.isFetching}
             error={quoteError}
             lateFeePerDay={item.lateFeePerDay}
-          />
+          >
+            {/* Phones book from the bar pinned to the bottom instead. */}
+            <div className="hidden flex-col gap-2 lg:flex">
+              <BookButton {...bookProps} />
+              <BookNote access={booking.access} />
+            </div>
+            <div className="lg:hidden">
+              <BookNote access={booking.access} />
+            </div>
+          </QuoteCard>
         </div>
 
         <div className="min-w-0 lg:col-start-1">
           <DiscountTable dailyPrice={item.dailyPrice} chosenDays={chosenDays} />
         </div>
       </div>
+
+      <MobileBookBar {...bookProps} error={complete ? quoteError : undefined} />
     </>
   )
 }

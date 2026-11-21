@@ -131,6 +131,23 @@ export const en = {
       depositNote: '— taken at pickup, refunded on return. Not part of the total.',
       lateFee: 'Late returns cost {{amount}} per day.',
     },
+    booking: {
+      book: 'Book',
+      bookFor: 'Book for {{price}}',
+      logInToBook: 'Log in to book',
+      guestNote: 'You will be asked to log in before booking.',
+      staffNote: 'Only customer accounts can book items.',
+      summary_one: '{{count}} day · deposit {{deposit}}',
+      summary_other: '{{count}} days · deposit {{deposit}}',
+      success: '{{item}} is booked.',
+      validation: {
+        required: 'Pick a start and an end date.',
+        past: 'The start date cannot be in the past. Choose another date.',
+        endBeforeStart: 'The end date cannot be before the start date.',
+        tooLong_one: 'A rental can be at most {{count}} day long.',
+        tooLong_other: 'A rental can be at most {{count}} days long.',
+      },
+    },
     discounts: {
       title: 'Longer rentals cost less',
       text: 'The discount applies to the whole rental once it reaches the length.',
