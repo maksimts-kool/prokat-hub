@@ -28,6 +28,37 @@ public sealed class RentalsController(IRentalService rentals) : ControllerBase
         [FromQuery] RentalListQuery query, CancellationToken cancellationToken) =>
         Ok(await rentals.GetPageAsync(query, cancellationToken));
 
+    /// <summary>Rentals that should have been returned: Issued or Overdue, past their end date (Service, Staff, Admin).</summary>
+    /// <remarks>
+    /// Oldest end date first. Issued rentals in the list are not marked yet; call <c>mark-late</c> for each one.
+    /// Overdue rentals stay in the list until they are returned, so calling <c>mark-late</c> again charges the new late days.
+    /// </remarks>
+    [HttpGet("overdue")]
+    [Authorize(Policy = Policies.OverdueProcessing)]
+    [ProducesResponseType<IReadOnlyList<StaffRentalDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<IReadOnlyList<StaffRentalDto>>> GetOverdue(CancellationToken cancellationToken) =>
+        Ok(await rentals.GetOverdueAsync(cancellationToken));
+
+    /// <summary>Marks a rental past its end date as Overdue and brings its late fee up to date (Service, Staff, Admin).</summary>
+    /// <remarks>
+    /// The late fee is one charge of the rental's <c>lateFeePerDay</c> (copied from the item, seeded as 150 % of the
+    /// daily price) for each day from the day after the end date up to today. Each day is charged once, so calling
+    /// this again recalculates the fee up to today instead of adding duplicates; it is safe to retry.
+    /// Issued → Overdue is saved in the status history. Returns 409 when the rental is not Issued or Overdue,
+    /// or its end date has not passed yet.
+    /// </remarks>
+    [HttpPost("{id:int}/mark-late")]
+    [Authorize(Policy = Policies.OverdueProcessing)]
+    [ProducesResponseType<RentalDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<RentalDto>> MarkLate(int id, CancellationToken cancellationToken) =>
+        Ok(await rentals.MarkLateAsync(id, User.GetUserId(), cancellationToken));
+
     /// <summary>Changes a rental's status (Customer, Staff, Admin).</summary>
     /// <remarks>
     /// Allowed changes: Booked → Issued (staff, from the start date to the end date), Booked → Cancelled

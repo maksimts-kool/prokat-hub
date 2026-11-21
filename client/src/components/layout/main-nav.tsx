@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, useLocation } from 'react-router'
-import { navItems } from '@/components/layout/nav-items'
+import { useNavItems } from '@/components/layout/nav-items'
 import { cn } from '@/lib/utils'
 
 interface Indicator {
@@ -12,6 +12,7 @@ interface Indicator {
 /** Desktop menu: a purple pill slides under the active link. */
 export function MainNav() {
   const { t, i18n } = useTranslation()
+  const navItems = useNavItems()
   const { pathname } = useLocation()
   const navRef = useRef<HTMLElement>(null)
   const [indicator, setIndicator] = useState<Indicator | null>(null)
@@ -36,8 +37,8 @@ export function MainNav() {
       observer.disconnect()
       clearTimeout(timer)
     }
-    // The language is a dependency because translated labels change the link widths.
-  }, [pathname, i18n.resolvedLanguage])
+    // The language and the links (they change on login) are dependencies because they move the active link.
+  }, [pathname, i18n.resolvedLanguage, navItems.length])
 
   return (
     <nav

@@ -50,6 +50,16 @@ public sealed class RentalRepository(AppDbContext db) : IRentalRepository
         return (page, totalCount);
     }
 
+    public async Task<IReadOnlyList<Rental>> GetOverdueAsync(DateOnly today, CancellationToken cancellationToken = default) =>
+        await db.Rentals.AsNoTracking()
+            .Where(r => (r.Status == RentalStatus.Issued || r.Status == RentalStatus.Overdue) && r.EndDate < today)
+            .OrderBy(r => r.EndDate).ThenBy(r => r.Id)
+            .Include(r => r.Item)
+            .Include(r => r.Customer)
+            .Include(r => r.LateFees)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+
     public async Task<Rental?> GetForStatusChangeAsync(int id, CancellationToken cancellationToken = default)
     {
         var rental = await db.Rentals
@@ -79,6 +89,22 @@ public sealed class RentalRepository(AppDbContext db) : IRentalRepository
                  r.Status == RentalStatus.Issued || r.Status == RentalStatus.Overdue))
             .OrderBy(r => r.StartDate).ThenBy(r => r.Id)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlySet<int>> GetTakenItemIdsAsync(
+        IReadOnlyCollection<int> itemIds, DateOnly from, DateOnly to, DateOnly today, CancellationToken cancellationToken = default)
+    {
+        // An Issued or Overdue rental past its end date keeps the item until today (RentalStatusRules.BlockedUntil).
+        var ids = await db.Rentals.AsNoTracking()
+            .Where(r => itemIds.Contains(r.ItemId) && r.StartDate <= to &&
+                ((r.Status == RentalStatus.Booked && r.EndDate >= from) ||
+                 ((r.Status == RentalStatus.Issued || r.Status == RentalStatus.Overdue) &&
+                  (r.EndDate >= from || today >= from))))
+            .Select(r => r.ItemId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        return ids.ToHashSet();
+    }
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
         db.Database.BeginTransactionAsync(cancellationToken);

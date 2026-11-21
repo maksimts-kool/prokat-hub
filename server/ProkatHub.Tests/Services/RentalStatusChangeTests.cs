@@ -19,13 +19,14 @@ public class RentalStatusChangeTests
 
     private readonly IRentalRepository _rentals = Substitute.For<IRentalRepository>();
     private readonly IDbContextTransaction _transaction = Substitute.For<IDbContextTransaction>();
+    private readonly IAvailabilityNotifier _availability = Substitute.For<IAvailabilityNotifier>();
     private readonly RentalService _service;
 
     public RentalStatusChangeTests()
     {
         _service = new RentalService(
             _rentals, Substitute.For<IItemRepository>(), Substitute.For<IDiscountTierRepository>(),
-            new PricingService(), new FixedTimeProvider(Now), NullLogger<RentalService>.Instance);
+            new PricingService(), _availability, new FixedTimeProvider(Now), NullLogger<RentalService>.Instance);
 
         _rentals.BeginTransactionAsync(Arg.Any<CancellationToken>()).Returns(_transaction);
     }
@@ -53,6 +54,7 @@ public class RentalStatusChangeTests
     {
         await _rentals.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
         await _transaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+        await _availability.DidNotReceiveWithAnyArgs().AvailabilityChangedAsync(default, default, default);
     }
 
     [Fact]
@@ -204,5 +206,49 @@ public class RentalStatusChangeTests
         Assert.Equal("Mari Maasikas", dto.CustomerFullName);
         Assert.Equal("mari@example.test", dto.CustomerEmail);
         Assert.Equal("Sony A7 IV", dto.ItemName);
+    }
+
+    [Fact]
+    public async Task Cancelling_announces_the_booked_days_after_it_is_committed()
+    {
+        GivenRental(RentalStatus.Booked, 3, 5);
+
+        await _service.ChangeStatusAsync(5, RentalStatus.Cancelled, null, CustomerId, RentalActor.Customer);
+
+        Received.InOrder(() =>
+        {
+            _transaction.CommitAsync(Arg.Any<CancellationToken>());
+            _availability.AvailabilityChangedAsync(1, Today.AddDays(3), Today.AddDays(5));
+        });
+    }
+
+    [Fact]
+    public async Task Returning_early_announces_the_days_up_to_the_planned_end()
+    {
+        GivenRental(RentalStatus.Issued, -2, 3);
+
+        await _service.ChangeStatusAsync(5, RentalStatus.Returned, null, StaffId, RentalActor.Staff);
+
+        await _availability.Received(1).AvailabilityChangedAsync(1, Today.AddDays(-2), Today.AddDays(3));
+    }
+
+    [Fact]
+    public async Task Returning_an_overdue_rental_announces_the_days_up_to_today()
+    {
+        GivenRental(RentalStatus.Overdue, -6, -3);
+
+        await _service.ChangeStatusAsync(5, RentalStatus.Returned, null, StaffId, RentalActor.Staff);
+
+        await _availability.Received(1).AvailabilityChangedAsync(1, Today.AddDays(-6), Today);
+    }
+
+    [Fact]
+    public async Task Issuing_announces_nothing_because_the_item_stays_taken()
+    {
+        GivenRental(RentalStatus.Booked, 0, 2);
+
+        await _service.ChangeStatusAsync(5, RentalStatus.Issued, null, StaffId, RentalActor.Staff);
+
+        await _availability.DidNotReceiveWithAnyArgs().AvailabilityChangedAsync(default, default, default);
     }
 }

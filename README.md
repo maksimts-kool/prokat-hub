@@ -31,7 +31,7 @@ cp .env.example .env
 docker compose watch
 ```
 
-`docker compose watch` builds and starts PostgreSQL, the API and the web client, then syncs code changes into the containers: `dotnet watch` reloads the API and Vite hot-reloads the client. Use `docker compose up -d` to run without hot reload.
+`docker compose watch` builds and starts PostgreSQL, the API, the overdue worker and the web client, then syncs code changes into the containers: `dotnet watch` reloads the API and Vite hot-reloads the client. Use `docker compose up -d` to run without hot reload.
 
 On startup in Development the API applies EF Core migrations and seeds the demo catalogue, discount tiers, one account per role and a few demo rentals.
 
@@ -41,6 +41,7 @@ On startup in Development the API applies EF Core migrations and seeds the demo 
 | http://localhost:8080/swagger | Swagger UI (Development only) |
 | http://localhost:8080/openapi/v1.json | OpenAPI document |
 | http://localhost:8080/health | Health check (API + database) |
+| ws://localhost:8080/ws/availability | SignalR hub for live availability updates (signed-in users) |
 
 Seeded accounts (passwords are the `SEED_*_PASSWORD` values in `.env`):
 
@@ -60,6 +61,40 @@ docker compose logs -f api
 ```
 
 The API logs through [Serilog](https://serilog.net/) and writes one line per request with method, path, status, duration, user id and trace id. The trace id is the same as `traceId` in error responses, so a failed call in the browser can be matched with its log line. `/health`, Swagger and OpenAPI requests are logged at Debug and hidden by default. Levels and the output format live in the `Serilog` section of `appsettings.json`. Override them with environment variables in `compose.yaml`, for example `Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore.Database.Command: Information` to see SQL queries.
+
+### Overdue worker
+
+`ProkatHub.Worker` is a separate .NET Worker Service that marks overdue rentals. Once at startup and then every hour (`WORKER_INTERVAL` in `.env`) it logs in as the Service account, calls `GET /api/rentals/overdue` and then `POST /api/rentals/{id}/mark-late` for each rental, and writes a summary line:
+
+```bash
+docker compose logs -f worker
+```
+
+It only talks to the API over HTTP (`http://api:8080` in Compose) and has no database access. The token is reused until shortly before it expires; a 401 logs in again once. The typed `HttpClient` has the standard Polly resilience pipeline (retries with backoff, timeouts, circuit breaker), tuned in the `Resilience` section of its `appsettings.json` so calls wait out an API restart. A failed run is logged and the worker carries on with the next one.
+
+To run it on the host against a running API:
+
+```bash
+cd server/ProkatHub.Worker
+dotnet user-secrets set "Api:Password" "<SEED_SERVICE_PASSWORD>"
+dotnet run
+```
+
+### Live availability (SignalR)
+
+The SignalR hub at `/ws/availability` tells connected clients when an item's availability changes, so pages update without a refresh. Any signed-in user may connect. Browsers can't send an `Authorization` header when opening a WebSocket, so the client passes the JWT as the `access_token` query parameter (`accessTokenFactory` in `@microsoft/signalr` does this). The token is read from the query string only on `/ws` paths, and request logs show it as `access_token=***`.
+
+Clients only listen. After a change is saved the API sends `AvailabilityChanged` with `{ itemId, from, to }` (dates as `yyyy-MM-dd`, both inclusive) to every connection:
+
+| Change | `from` – `to` |
+| --- | --- |
+| Rental booked | the booked days |
+| Rental cancelled or returned | the days it held, up to today for a late return |
+| Rental marked late (`mark-late`) | the day after the end date – today; sent once a day, not on every hourly run |
+
+A client showing that item for overlapping dates should reload its availability. `RentalService` sends events through `IAvailabilityNotifier`, so its tests use a mock; a failed broadcast is logged and doesn't fail the request.
+
+In the web client, `LiveAvailabilityProvider` (`client/src/realtime/`) keeps one connection open while someone is signed in. On `AvailabilityChanged` it invalidates the TanStack Query caches the change touches: that item's booked days and quotes for overlapping dates, and catalogue lists searched by overlapping dates or sorted by popularity. An open item page therefore shows another customer's booking without a refresh, and its "Live availability" dot shows the connection is up. The connection reconnects by itself, retrying every 30 s at most for as long as it takes, and reloads all availability data once it is back, since events sent in between are lost. A notice appears only while an open connection is lost. Guests are not connected, because the hub only accepts signed-in users.
 
 ## Development without Docker
 

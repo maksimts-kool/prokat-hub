@@ -23,6 +23,26 @@ public sealed class ItemListQueryValidator : AbstractValidator<ItemListQuery>
             .When(x => x.MaxPrice.HasValue)
             .WithMessage("MinPrice must not be greater than MaxPrice.");
 
+        RuleFor(x => x.To)
+            .NotNull()
+            .When(x => x.From.HasValue)
+            .WithMessage("To is required when From is given.");
+        RuleFor(x => x.From)
+            .NotNull()
+            .When(x => x.To.HasValue)
+            .WithMessage("From is required when To is given.");
+        When(x => x.From.HasValue && x.To.HasValue, () =>
+        {
+            RuleFor(x => x.From)
+                .LessThanOrEqualTo(x => x.To)
+                .WithMessage("From must not be after To.");
+
+            RuleFor(x => x.To)
+                .Must((query, to) => to!.Value.DayNumber - query.From!.Value.DayNumber + 1 <= DateRangeQuery.MaxDays)
+                .When(x => x.From <= x.To)
+                .WithMessage($"The range must not be longer than {DateRangeQuery.MaxDays} days.");
+        });
+
         RuleFor(x => x.Page).GreaterThanOrEqualTo(1);
         RuleFor(x => x.PageSize).InclusiveBetween(1, 100);
     }

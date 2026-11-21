@@ -2,6 +2,9 @@ using ProkatHub.Api.Domain;
 
 namespace ProkatHub.Api.Dtos;
 
+/// <param name="LateFeePerDay">Fee for each day the item is returned late, copied from the item when booking.</param>
+/// <param name="LateDays">Late days charged so far.</param>
+/// <param name="LateFeeTotal">Sum of the late fees charged so far: <paramref name="LateDays"/> × <paramref name="LateFeePerDay"/>.</param>
 public sealed record RentalDto(
     int Id,
     int ItemId,
@@ -15,6 +18,8 @@ public sealed record RentalDto(
     decimal DiscountPercent,
     decimal TotalPrice,
     decimal Deposit,
+    decimal LateFeePerDay,
+    int LateDays,
     decimal LateFeeTotal,
     DateTimeOffset CreatedAt);
 
@@ -87,6 +92,9 @@ public sealed record RentalListQuery
 }
 
 /// <summary>A rental as staff see it: the customer's rental plus who booked it and when it was issued and returned.</summary>
+/// <param name="LateFeePerDay">Fee for each day the item is returned late, copied from the item when booking.</param>
+/// <param name="LateDays">Late days charged so far.</param>
+/// <param name="LateFeeTotal">Sum of the late fees charged so far: <paramref name="LateDays"/> × <paramref name="LateFeePerDay"/>.</param>
 public sealed record StaffRentalDto(
     int Id,
     int ItemId,
@@ -103,6 +111,8 @@ public sealed record StaffRentalDto(
     decimal DiscountPercent,
     decimal TotalPrice,
     decimal Deposit,
+    decimal LateFeePerDay,
+    int LateDays,
     decimal LateFeeTotal,
     DateTimeOffset CreatedAt,
     DateTimeOffset? IssuedAt,

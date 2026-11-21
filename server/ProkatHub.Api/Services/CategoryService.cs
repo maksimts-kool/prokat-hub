@@ -12,11 +12,15 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
     public async Task<IReadOnlyList<CategoryDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var all = await categories.GetAllAsync(cancellationToken);
-        return all.Select(CatalogueMapper.ToDto).ToList();
+        var counts = await categories.CountActiveItemsAsync(cancellationToken);
+        return all.Select(c => c.ToDto(counts.GetValueOrDefault(c.Id))).ToList();
     }
 
-    public async Task<CategoryDto> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
-        (await FindAsync(id, cancellationToken)).ToDto();
+    public async Task<CategoryDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var category = await FindAsync(id, cancellationToken);
+        return category.ToDto(await categories.CountActiveItemsAsync(id, cancellationToken));
+    }
 
     public async Task<CategoryDto> CreateAsync(CategoryRequest request, CancellationToken cancellationToken = default)
     {
@@ -27,7 +31,7 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
         await categories.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Created category {CategoryId} ({Slug})", category.Id, category.Slug);
 
-        return category.ToDto();
+        return category.ToDto(itemCount: 0);
     }
 
     public async Task<CategoryDto> UpdateAsync(int id, CategoryRequest request, CancellationToken cancellationToken = default)
@@ -38,7 +42,7 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
         await categories.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Updated category {CategoryId}", id);
 
-        return category.ToDto();
+        return category.ToDto(await categories.CountActiveItemsAsync(id, cancellationToken));
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)

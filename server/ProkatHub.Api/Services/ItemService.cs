@@ -15,8 +15,24 @@ public sealed class ItemService(
 {
     public async Task<PagedResult<ItemSummaryDto>> GetPageAsync(ItemListQuery query, CancellationToken cancellationToken = default)
     {
+        var dates = query.DateRange();
+        var today = RentalDateRange.Today(timeProvider);
+        if (dates is { } range)
+        {
+            RentalDateRange.EnsureBookable(range.From, range.To, today);
+        }
+
         var (page, totalCount) = await items.GetPageAsync(query, cancellationToken);
-        return new PagedResult<ItemSummaryDto>(page.Select(CatalogueMapper.ToSummaryDto).ToList(), query.Page, query.PageSize, totalCount);
+
+        // Without dates there is nothing to check, and IsAvailable stays null.
+        IReadOnlySet<int>? taken = dates is { } days && page.Count > 0
+            ? await rentals.GetTakenItemIdsAsync(page.Select(i => i.Id).ToList(), days.From, days.To, today, cancellationToken)
+            : null;
+
+        var result = page
+            .Select(i => i.ToSummaryDto(dates is null ? null : taken?.Contains(i.Id) != true))
+            .ToList();
+        return new PagedResult<ItemSummaryDto>(result, query.Page, query.PageSize, totalCount);
     }
 
     public async Task<ItemDetailsDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)

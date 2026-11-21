@@ -2,7 +2,7 @@ import { Menu } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router'
-import { navItems } from '@/components/layout/nav-items'
+import { useNavItems } from '@/components/layout/nav-items'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { Logo } from '@/components/logo'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 /** Hamburger menu shown below the md breakpoint. */
 export function MobileNav() {
   const { t } = useTranslation()
+  const navItems = useNavItems()
   const [open, setOpen] = useState(false)
 
   return (

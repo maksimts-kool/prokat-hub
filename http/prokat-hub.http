@@ -9,6 +9,8 @@
 @staffPassword = Staff12345
 @adminEmail = admin@prokathub.test
 @adminPassword = Admin12345
+@serviceEmail = service@prokathub.test
+@servicePassword = Service12345
 # Change these to dates from today onwards before running the availability requests.
 @from = 2026-12-01
 @to = 2026-12-14
@@ -33,6 +35,12 @@ GET {{baseUrl}}/api/items?minPrice=20&maxPrice=40&sort=price
 
 ### Most rented items first
 GET {{baseUrl}}/api/items?sort=popularity&pageSize=5
+
+### Catalogue for a week: each item's isAvailable says whether it is free on those days
+GET {{baseUrl}}/api/items?from=2026-12-07&to=2026-12-13
+
+### From without To → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/items?from=2026-12-07
 
 ### Unknown sort value → 400 ValidationProblemDetails
 GET {{baseUrl}}/api/items?sort=rating
@@ -247,6 +255,53 @@ Content-Type: application/json
 {
   "status": "Cancelled"
 }
+
+### Log in as the Service account (used by the overdue worker)
+# @name serviceLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{serviceEmail}}",
+  "password": "{{servicePassword}}"
+}
+
+### Overdue rentals (Service) → 200, Issued or Overdue past their end date, oldest first
+# @name overdue
+GET {{baseUrl}}/api/rentals/overdue
+Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+
+### Overdue rentals (Staff) → 200
+GET {{baseUrl}}/api/rentals/overdue
+Authorization: Bearer {{staffLogin.response.body.accessToken}}
+
+### Overdue rentals with a Customer token → 403
+GET {{baseUrl}}/api/rentals/overdue
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
+
+### Overdue rentals without a token → 401
+GET {{baseUrl}}/api/rentals/overdue
+
+### Mark the first overdue rental late → 200, status Overdue, lateDays × lateFeePerDay = lateFeeTotal
+# Needs at least one rental in the overdue list.
+POST {{baseUrl}}/api/rentals/{{overdue.response.body.$[0].id}}/mark-late
+Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+
+### Mark it late again → 200 with the same fee (days are never charged twice)
+POST {{baseUrl}}/api/rentals/{{overdue.response.body.$[0].id}}/mark-late
+Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+
+### Mark late the booking cancelled above (not Issued or Overdue) → 409 ProblemDetails
+POST {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/mark-late
+Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+
+### Mark late an unknown rental → 404 ProblemDetails
+POST {{baseUrl}}/api/rentals/99999/mark-late
+Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+
+### Mark late with a Customer token → 403
+POST {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/mark-late
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
 
 ### Log in as admin
 # @name adminLogin

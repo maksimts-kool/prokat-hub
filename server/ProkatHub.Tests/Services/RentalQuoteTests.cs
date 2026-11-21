@@ -19,7 +19,7 @@ public class RentalQuoteTests
     public RentalQuoteTests()
     {
         _service = new RentalService(
-            Substitute.For<IRentalRepository>(), _items, _tiers, new PricingService(),
+            Substitute.For<IRentalRepository>(), _items, _tiers, new PricingService(), Substitute.For<IAvailabilityNotifier>(),
             new FixedTimeProvider(new DateTimeOffset(Today.ToDateTime(new TimeOnly(15, 0)), TimeSpan.Zero)),
             NullLogger<RentalService>.Instance);
 

@@ -15,6 +15,7 @@ public interface IRentalService
     /// <summary>
     /// Books an item for a customer at the price <see cref="IPricingService"/> calculates. The availability check
     /// and the insert run in one transaction that holds a lock on the item, so the item cannot be booked twice.
+    /// After saving, <see cref="IAvailabilityNotifier"/> announces the booked days.
     /// </summary>
     /// <exception cref="Infrastructure.NotFoundException">The item does not exist or is retired.</exception>
     /// <exception cref="Infrastructure.RequestValidationException">The range is invalid or starts in the past.</exception>
@@ -28,7 +29,8 @@ public interface IRentalService
     /// <summary>
     /// Moves a rental to <paramref name="status"/> if <see cref="RentalStatusRules"/> allows it for
     /// <paramref name="actor"/>, and records the change in the status history. Returning an item after its
-    /// end date charges every late day that has not been charged yet.
+    /// end date charges every late day that has not been charged yet. Cancelling or returning announces the days the
+    /// rental held through <see cref="IAvailabilityNotifier"/>.
     /// </summary>
     /// <param name="userId">The signed-in user, saved in the history. A customer may only change their own rentals.</param>
     /// <exception cref="Infrastructure.NotFoundException">The rental does not exist, or belongs to another customer.</exception>
@@ -37,4 +39,22 @@ public interface IRentalService
     Task<RentalDto> ChangeStatusAsync(
         int rentalId, RentalStatus status, string? note, Guid userId, RentalActor actor,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Issued and Overdue rentals past their end date, oldest first. Overdue ones stay in the list until they are
+    /// returned, so the hourly process keeps charging the new late days.
+    /// </summary>
+    Task<IReadOnlyList<StaffRentalDto>> GetOverdueAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Marks an Issued rental past its end date as Overdue (recorded in the status history) and brings its late fee
+    /// up to date: one fee of <see cref="Rental.LateFeePerDay"/> for each day from the day after the end date to today.
+    /// Days already charged are not charged again, so calling this again, or for a rental that is already Overdue,
+    /// only adds the days since the last call. When the rental becomes Overdue or gets a new late day,
+    /// <see cref="IAvailabilityNotifier"/> announces the days from the day after the end date to today.
+    /// </summary>
+    /// <param name="userId">The signed-in user (usually the Service account), saved in the history.</param>
+    /// <exception cref="Infrastructure.NotFoundException">The rental does not exist.</exception>
+    /// <exception cref="Infrastructure.ConflictException">The rental is not Issued or Overdue, or its end date has not passed.</exception>
+    Task<RentalDto> MarkLateAsync(int rentalId, Guid userId, CancellationToken cancellationToken = default);
 }

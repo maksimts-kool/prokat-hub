@@ -1,5 +1,10 @@
 namespace ProkatHub.Api.Dtos;
 
+/// <summary>One item in the catalogue list.</summary>
+/// <param name="IsAvailable">
+/// Whether the item is free on every day of the <c>from</c>–<c>to</c> range of the request;
+/// null when the request has no dates.
+/// </param>
 public sealed record ItemSummaryDto(
     int Id,
     string Name,
@@ -8,7 +13,8 @@ public sealed record ItemSummaryDto(
     string CategoryName,
     decimal DailyPrice,
     decimal Deposit,
-    string? ImageUrl);
+    string? ImageUrl,
+    bool? IsAvailable);
 
 public sealed record ItemDetailsDto(
     int Id,
@@ -49,6 +55,15 @@ public sealed record ItemListQuery
 
     public decimal? MaxPrice { get; init; }
 
+    /// <summary>
+    /// First rental day (inclusive). With <see cref="To"/>, each item says whether it is free on those days;
+    /// items that are taken are still listed.
+    /// </summary>
+    public DateOnly? From { get; init; }
+
+    /// <summary>Last rental day (inclusive). Give both dates or neither.</summary>
+    public DateOnly? To { get; init; }
+
     /// <summary>One of <c>name</c> (default), <c>name_desc</c>, <c>price</c>, <c>price_desc</c>, <c>popularity</c>.</summary>
     public string? Sort { get; init; }
 
@@ -60,6 +75,9 @@ public sealed record ItemListQuery
 
     /// <summary>The sort order in lower case, or <see cref="ItemSort.Name"/> when none was given.</summary>
     public string NormalizedSort() => string.IsNullOrWhiteSpace(Sort) ? ItemSort.Name : Sort.Trim().ToLowerInvariant();
+
+    /// <summary>The rental days asked about, or null when the request has no dates.</summary>
+    public (DateOnly From, DateOnly To)? DateRange() => From is { } from && To is { } to ? (from, to) : null;
 
     /// <summary>The search text without surrounding spaces, or null when it is blank.</summary>
     public string? NormalizedSearch() => string.IsNullOrWhiteSpace(Search) ? null : Search.Trim();

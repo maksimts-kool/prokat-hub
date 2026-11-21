@@ -40,6 +40,7 @@ public class MapperTests
             StartDate = new(2026, 12, 1),
             EndDate = new(2026, 12, 3),
             Status = RentalStatus.Overdue,
+            LateFeePerDay = 15m,
             LateFees = [new LateFee { Amount = 10m }, new LateFee { Amount = 12.5m }],
         };
 
@@ -48,6 +49,8 @@ public class MapperTests
         Assert.Equal("Sony A7 IV", dto.ItemName);
         Assert.Equal("https://example.com/a7.jpg", dto.ItemImageUrl);
         Assert.Equal(3, dto.Days);
+        Assert.Equal(15m, dto.LateFeePerDay);
+        Assert.Equal(2, dto.LateDays);
         Assert.Equal(22.5m, dto.LateFeeTotal);
     }
 

@@ -27,6 +27,16 @@ public sealed class CategoryRepository(AppDbContext db) : ICategoryRepository
             duplicates.Any(c => c.Slug == slug));
     }
 
+    public async Task<IReadOnlyDictionary<int, int>> CountActiveItemsAsync(CancellationToken cancellationToken = default) =>
+        await db.Items.AsNoTracking()
+            .Where(i => i.IsActive)
+            .GroupBy(i => i.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CategoryId, x => x.Count, cancellationToken);
+
+    public Task<int> CountActiveItemsAsync(int id, CancellationToken cancellationToken = default) =>
+        db.Items.CountAsync(i => i.CategoryId == id && i.IsActive, cancellationToken);
+
     public Task<bool> HasItemsAsync(int id, CancellationToken cancellationToken = default) =>
         db.Items.AnyAsync(i => i.CategoryId == id, cancellationToken);
 

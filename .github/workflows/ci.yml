@@ -97,7 +97,7 @@ jobs:
       - name: Validate compose.yaml
         run: docker compose config --quiet
 
-      - name: Build dev images (api, web)
+      - name: Build dev images (api, worker, web)
         run: docker compose build
 
       - name: Build production API image

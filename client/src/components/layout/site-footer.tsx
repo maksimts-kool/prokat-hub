@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { navItems } from '@/components/layout/nav-items'
+import { useNavItems } from '@/components/layout/nav-items'
 import { Logo } from '@/components/logo'
 
 const year = new Date().getFullYear()
 
 export function SiteFooter() {
   const { t } = useTranslation()
+  const navItems = useNavItems()
 
   return (
     <footer className="mt-16">
