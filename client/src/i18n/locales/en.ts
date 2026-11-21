@@ -103,6 +103,8 @@ export const en = {
   },
   item: {
     chooseDates: 'Choose dates',
+    live: 'Live availability',
+    liveLost: 'Reconnecting',
     dailyPrice: 'Daily price',
     deposit: 'Deposit',
     lateFee: 'Late fee',
@@ -264,6 +266,11 @@ export const en = {
     backHome: 'Back to home',
   },
   /** Client-side text for API errors. The API's own messages stay in English. */
+  realtime: {
+    lost: 'Live updates paused',
+    lostDescription:
+      'The connection to the server was lost. Booked days may be out of date until it is back.',
+  },
   errors: {
     unauthorized: 'Please log in to continue.',
     forbidden: 'You do not have permission to do this.',

@@ -13,13 +13,16 @@ import { MyRentalsPage } from '@/pages/my-rentals-page'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RegisterPage } from '@/pages/register-page'
 import { ReportsPage } from '@/pages/reports-page'
+import { LiveAvailabilityProvider } from '@/realtime/live-availability-provider'
 
 export const router = createBrowserRouter([
   {
-    // Inside the router so a 401 can navigate to the login page.
+    // Inside the router so a 401 can navigate to the login page. Live updates need the signed-in user.
     element: (
       <AuthProvider>
-        <Outlet />
+        <LiveAvailabilityProvider>
+          <Outlet />
+        </LiveAvailabilityProvider>
       </AuthProvider>
     ),
     errorElement: <ErrorPage />,

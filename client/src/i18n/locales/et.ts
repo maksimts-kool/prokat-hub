@@ -102,6 +102,8 @@ export const et: Translations = {
   },
   item: {
     chooseDates: 'Vali kuupäevad',
+    live: 'Saadavus reaalajas',
+    liveLost: 'Ühendan uuesti',
     dailyPrice: 'Hind päevas',
     deposit: 'Tagatisraha',
     lateFee: 'Hilinemistasu',
@@ -259,6 +261,11 @@ export const et: Translations = {
     title: 'Midagi läks valesti',
     unknown: 'Tundmatu viga',
     backHome: 'Tagasi avalehele',
+  },
+  realtime: {
+    lost: 'Reaalajas uuendused on peatatud',
+    lostDescription:
+      'Ühendus serveriga katkes. Broneeritud päevad ei pruugi olla ajakohased, kuni see taastub.',
   },
   errors: {
     unauthorized: 'Jätkamiseks logi sisse.',

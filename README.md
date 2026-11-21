@@ -94,6 +94,8 @@ Clients only listen. After a change is saved the API sends `AvailabilityChanged`
 
 A client showing that item for overlapping dates should reload its availability. `RentalService` sends events through `IAvailabilityNotifier`, so its tests use a mock; a failed broadcast is logged and doesn't fail the request.
 
+In the web client, `LiveAvailabilityProvider` (`client/src/realtime/`) keeps one connection open while someone is signed in. On `AvailabilityChanged` it invalidates the TanStack Query caches the change touches: that item's booked days and quotes for overlapping dates, and catalogue lists searched by overlapping dates or sorted by popularity. An open item page therefore shows another customer's booking without a refresh, and its "Live availability" dot shows the connection is up. The connection reconnects by itself, retrying every 30 s at most for as long as it takes, and reloads all availability data once it is back, since events sent in between are lost. A notice appears only while an open connection is lost. Guests are not connected, because the hub only accepts signed-in users.
+
 ## Development without Docker
 
 The API also runs on the host with the .NET 10 SDK, using the Docker database:

@@ -32,6 +32,7 @@ import { discountRows, rowIncludes } from '@/lib/discount-tiers'
 import { cn } from '@/lib/utils'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { dateRangeState, isoDate, MAX_DAYS, todayIso } from '@/pages/catalogue/catalogue-filters'
+import { useLiveStatus } from '@/realtime/live-status-context'
 
 const toIso = (date: Date) => format(date, 'yyyy-MM-dd')
 
@@ -201,7 +202,10 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
         </div>
 
         <div className="flex flex-col gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <h2 className="text-lg leading-7 font-semibold">{t('item.chooseDates')}</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg leading-7 font-semibold">{t('item.chooseDates')}</h2>
+            <LiveIndicator />
+          </div>
           {availability.isError && (
             <FormAlert>
               {t('item.availabilityError')} {apiErrorMessage(availability.error)}
@@ -248,6 +252,27 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
 
       <MobileBookBar {...bookProps} error={complete ? quoteError : undefined} />
     </>
+  )
+}
+
+/**
+ * "Live availability" with a green dot while booked days follow other people's bookings; a muted
+ * "Reconnecting" while the connection is lost. Nothing for guests, who get no live updates.
+ */
+function LiveIndicator() {
+  const { t } = useTranslation()
+  const status = useLiveStatus()
+  if (status !== 'live' && status !== 'lost') return null
+
+  const live = status === 'live'
+  return (
+    <span className="inline-flex items-center gap-2 text-xs text-muted-foreground" role="status">
+      <span
+        aria-hidden
+        className={cn('size-2 rounded-full', live ? 'bg-green-600' : 'bg-muted-foreground')}
+      />
+      {live ? t('item.live') : t('item.liveLost')}
+    </span>
   )
 }
 
