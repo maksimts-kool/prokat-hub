@@ -90,18 +90,6 @@ export function QuoteCard({
               </dd>
             </div>
           </dl>
-
-          <Note icon={<ShieldCheck />}>
-            <strong className="font-semibold text-foreground">
-              {t('item.quote.deposit', { amount: formatPrice(quote.deposit) })}
-            </strong>{' '}
-            {t('item.quote.depositNote')}
-          </Note>
-          {lateFeePerDay !== undefined && (
-            <Note icon={<Clock />}>
-              {t('item.quote.lateFee', { amount: formatPrice(lateFeePerDay) })}
-            </Note>
-          )}
         </div>
       ) : loading ? (
         <QuoteSkeleton />
@@ -116,9 +104,26 @@ export function QuoteCard({
         )
       )}
 
+      {/* The action right under the total, then what went wrong, then the fine print. */}
+      {children}
+
       {error && <FormAlert>{error}</FormAlert>}
 
-      {children}
+      {quote && (
+        <div className="flex flex-col gap-4">
+          <Note icon={<ShieldCheck />}>
+            <strong className="font-semibold text-foreground">
+              {t('item.quote.deposit', { amount: formatPrice(quote.deposit) })}
+            </strong>{' '}
+            {t('item.quote.depositNote')}
+          </Note>
+          {lateFeePerDay !== undefined && (
+            <Note icon={<Clock />}>
+              {t('item.quote.lateFee', { amount: formatPrice(lateFeePerDay) })}
+            </Note>
+          )}
+        </div>
+      )}
     </aside>
   )
 }

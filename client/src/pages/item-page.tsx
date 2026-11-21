@@ -239,9 +239,11 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
               <BookButton {...bookProps} />
               <BookNote access={booking.access} />
             </div>
-            <div className="lg:hidden">
-              <BookNote access={booking.access} />
-            </div>
+            {(booking.access === 'guest' || booking.access === 'staff') && (
+              <div className="lg:hidden">
+                <BookNote access={booking.access} />
+              </div>
+            )}
           </QuoteCard>
         </div>
 
