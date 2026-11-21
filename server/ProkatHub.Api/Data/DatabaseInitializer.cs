@@ -103,6 +103,7 @@ public sealed class DatabaseInitializer(
     {
         if (await db.Categories.AnyAsync(cancellationToken))
         {
+            await BackfillDemoSpecificationsAsync(cancellationToken);
             return;
         }
 
@@ -111,6 +112,22 @@ public sealed class DatabaseInitializer(
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Seeded {Categories} categories and {Items} items",
             categories.Count, categories.Sum(c => c.Items.Count));
+    }
+
+    /// <summary>Gives demo items seeded before specifications existed their specifications.</summary>
+    private async Task BackfillDemoSpecificationsAsync(CancellationToken cancellationToken)
+    {
+        var items = await db.Items.ToListAsync(cancellationToken);
+        var filled = 0;
+        foreach (var item in items.Where(i => i.Specifications.Count == 0))
+        {
+            item.Specifications = DemoCatalogue.SpecificationsFor(item.Name);
+            if (item.Specifications.Count > 0) filled++;
+        }
+
+        if (filled == 0) return;
+        await db.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Added specifications to {Items} demo items", filled);
     }
 
     private async Task SeedDemoRentalsAsync(CancellationToken cancellationToken)

@@ -6,8 +6,35 @@ namespace ProkatHub.Tests.Validation;
 
 public class CatalogueRequestValidatorTests
 {
-    private static ItemRequest ValidItem(string? imageUrl = null) =>
-        new(1, "Sony A7 IV", "Sony", "Full-frame camera body.", imageUrl, 25m, 300m, 10m);
+    private static ItemRequest ValidItem(string? imageUrl = null, IReadOnlyList<ItemSpecificationDto>? specs = null) =>
+        new(1, "Sony A7 IV", "Sony", "Full-frame camera body.", imageUrl, 25m, 300m, 10m, specs);
+
+    [Fact]
+    public void Camel_case_specification_keys_are_accepted()
+    {
+        new ItemRequestValidator().TestValidate(ValidItem(specs: [new("cpu", "Apple M4 Pro"), new("flightTime", "34 min")]))
+            .ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("CPU")]
+    [InlineData("flight time")]
+    [InlineData("ram-size")]
+    public void Malformed_specification_key_is_rejected(string key)
+    {
+        new ItemRequestValidator().TestValidate(ValidItem(specs: [new(key, "16 GB")]))
+            .ShouldHaveValidationErrorFor("Specifications[0].Key");
+    }
+
+    [Fact]
+    public void Blank_specification_value_and_repeated_keys_are_rejected()
+    {
+        var result = new ItemRequestValidator().TestValidate(ValidItem(specs: [new("ram", "16 GB"), new("ram", " ")]));
+
+        result.ShouldHaveValidationErrorFor(x => x.Specifications);
+        result.ShouldHaveValidationErrorFor("Specifications[1].Value");
+    }
 
     [Theory]
     [InlineData(null)]

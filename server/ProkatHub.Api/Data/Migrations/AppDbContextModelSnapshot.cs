@@ -550,7 +550,34 @@ namespace ProkatHub.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.OwnsMany("ProkatHub.Api.Domain.ItemSpecification", "Specifications", b1 =>
+                        {
+                            b1.Property<int>("ItemId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<string>("Key")
+                                .IsRequired();
+
+                            b1.Property<string>("Value")
+                                .IsRequired();
+
+                            b1.HasKey("ItemId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Items");
+
+                            b1
+                                .ToJson("Specifications")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ItemId");
+                        });
+
                     b.Navigation("Category");
+
+                    b.Navigation("Specifications");
                 });
 
             modelBuilder.Entity("ProkatHub.Api.Domain.LateFee", b =>

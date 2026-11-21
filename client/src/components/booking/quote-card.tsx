@@ -18,8 +18,9 @@ interface QuoteCardProps {
   /** True while a quote for new dates is loading; the old one stays on screen. */
   loading: boolean
   error: string | undefined
-  /** Late fee per day from the item's details (the quote does not carry it). */
-  lateFeePerDay: number | undefined
+  /** The item's deposit and late fee per day, shown under the action even before dates are picked. */
+  deposit: number
+  lateFeePerDay: number
   /** The booking action, below the price. */
   children?: ReactNode
   className?: string
@@ -32,6 +33,7 @@ export function QuoteCard({
   preview,
   loading,
   error,
+  deposit,
   lateFeePerDay,
   children,
   className,
@@ -90,18 +92,6 @@ export function QuoteCard({
               </dd>
             </div>
           </dl>
-
-          <Note icon={<ShieldCheck />}>
-            <strong className="font-semibold text-foreground">
-              {t('item.quote.deposit', { amount: formatPrice(quote.deposit) })}
-            </strong>{' '}
-            {t('item.quote.depositNote')}
-          </Note>
-          {lateFeePerDay !== undefined && (
-            <Note icon={<Clock />}>
-              {t('item.quote.lateFee', { amount: formatPrice(lateFeePerDay) })}
-            </Note>
-          )}
         </div>
       ) : loading ? (
         <QuoteSkeleton />
@@ -116,9 +106,22 @@ export function QuoteCard({
         )
       )}
 
+      {/* The action right under the total, then what went wrong, then the fine print. */}
+      {children}
+
       {error && <FormAlert>{error}</FormAlert>}
 
-      {children}
+      <div className="flex flex-col gap-4">
+        <Note icon={<ShieldCheck />}>
+          <strong className="font-semibold text-foreground">
+            {t('item.quote.deposit', { amount: formatPrice(deposit) })}
+          </strong>{' '}
+          {t('item.quote.depositNote')}
+        </Note>
+        <Note icon={<Clock />}>
+          {t('item.quote.lateFee', { amount: formatPrice(lateFeePerDay) })}
+        </Note>
+      </div>
     </aside>
   )
 }

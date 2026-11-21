@@ -4,6 +4,7 @@
  * ProkatHub.Api | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { ItemSpecificationDto } from './itemSpecificationDto'
 
 /**
  * Body of `POST /api/items` and `PUT /api/items/{id}`.
@@ -43,4 +44,6 @@ export interface ItemRequest {
    * @maximum 100000
    */
   lateFeePerDay: number
+  /** @nullable */
+  specifications?: ItemSpecificationDto[] | null
 }

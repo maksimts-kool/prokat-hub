@@ -4,6 +4,7 @@
  * ProkatHub.Api | v1
  * OpenAPI spec version: 1.0.0
  */
+import type { ItemSpecificationDto } from './itemSpecificationDto'
 
 export interface ItemDetailsDto {
   id: number
@@ -17,4 +18,5 @@ export interface ItemDetailsDto {
   lateFeePerDay: number
   /** @nullable */
   imageUrl: string | null
+  specifications: ItemSpecificationDto[]
 }

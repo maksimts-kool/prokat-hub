@@ -17,6 +17,7 @@ public class MapperTests
         DailyPrice = 25m,
         Deposit = 300m,
         LateFeePerDay = 10m,
+        Specifications = [new() { Key = "sensor", Value = "Full-frame CMOS, 33 MP" }, new() { Key = "weight", Value = "658 g" }],
     };
 
     [Fact]
@@ -27,6 +28,16 @@ public class MapperTests
         Assert.Equal("Cameras", dto.CategoryName);
         Assert.Equal(2, dto.CategoryId);
         Assert.Equal(10m, dto.LateFeePerDay);
+    }
+
+    [Fact]
+    public void Item_specifications_keep_their_order()
+    {
+        var dto = Camera().ToDetailsDto();
+
+        Assert.Equal(
+            [new("sensor", "Full-frame CMOS, 33 MP"), new("weight", "658 g")],
+            dto.Specifications.ToArray<ProkatHub.Api.Dtos.ItemSpecificationDto>());
     }
 
     [Fact]
