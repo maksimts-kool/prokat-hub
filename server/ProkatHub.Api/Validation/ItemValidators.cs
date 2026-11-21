@@ -67,7 +67,25 @@ public sealed class ItemRequestValidator : AbstractValidator<ItemRequest>
         RuleFor(x => x.DailyPrice).NotNull().InclusiveBetween(0.01m, 100_000m);
         RuleFor(x => x.Deposit).NotNull().InclusiveBetween(0m, 1_000_000m);
         RuleFor(x => x.LateFeePerDay).NotNull().InclusiveBetween(0m, 100_000m);
+
+        RuleFor(x => x.Specifications)
+            .Must(s => s!.Count <= MaxSpecifications)
+            .WithMessage($"An item can have at most {MaxSpecifications} specifications.")
+            .Must(s => s!.Select(spec => spec?.Key?.Trim()).Distinct().Count() == s!.Count)
+            .WithMessage("Each specification key may appear only once.")
+            .When(x => x.Specifications is not null);
+        RuleForEach(x => x.Specifications).ChildRules(spec =>
+        {
+            spec.RuleFor(s => s.Key).NotEmpty().Matches(SpecificationKeyPattern)
+                .WithMessage("Key must be camelCase letters and digits, e.g. \"cpu\" or \"flightTime\".");
+            spec.RuleFor(s => s.Value).NotEmpty().MaximumLength(200);
+        });
     }
+
+    public const int MaxSpecifications = 20;
+
+    /// <summary>camelCase, 1–40 characters: the key the client translates into a label.</summary>
+    public const string SpecificationKeyPattern = "^[a-z][a-zA-Z0-9]{0,39}$";
 
     private static bool BeHttpUrl(string? url) =>
         Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);

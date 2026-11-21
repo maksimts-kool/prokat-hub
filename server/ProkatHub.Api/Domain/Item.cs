@@ -13,6 +13,9 @@ public class Item
     public decimal DailyPrice { get; set; }
     public decimal Deposit { get; set; }
     public decimal LateFeePerDay { get; set; }
+    /// <summary>Technical details in display order, stored as a JSON column.</summary>
+    public List<ItemSpecification> Specifications { get; set; } = [];
+
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
 

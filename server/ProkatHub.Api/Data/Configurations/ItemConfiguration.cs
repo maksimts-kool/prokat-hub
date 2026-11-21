@@ -20,6 +20,9 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
         builder.Property(i => i.Description).HasMaxLength(2000);
         builder.Property(i => i.ImageUrl).HasMaxLength(500);
 
+        // A jsonb column holding the list; the migration gives existing rows an empty list.
+        builder.OwnsMany(i => i.Specifications, spec => spec.ToJson());
+
         builder.HasOne(i => i.Category)
             .WithMany(c => c.Items)
             .HasForeignKey(i => i.CategoryId)

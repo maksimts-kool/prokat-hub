@@ -35,6 +35,7 @@ public static class DemoCatalogue
                 Deposit = deposit,
                 LateFeePerDay = Math.Round(dailyPrice * LateFeeRate, 2),
                 ImageUrl = $"https://placehold.co/640x480/png?text={Uri.EscapeDataString(name)}",
+                Specifications = SpecificationsFor(name),
                 CreatedAt = now,
             });
 
@@ -80,4 +81,188 @@ public static class DemoCatalogue
 
         return [cameras, lenses, drones, audio, projectors, laptops, consoles];
     }
+
+    /// <summary>The demo item's specifications, or none for an item that is not in the demo catalogue.</summary>
+    public static List<ItemSpecification> SpecificationsFor(string itemName) =>
+        Specifications.TryGetValue(itemName, out var specs)
+            ? specs.Select(s => new ItemSpecification { Key = s.Key, Value = s.Value }).ToList()
+            : [];
+
+    /// <summary>
+    /// Specifications of the demo items by item name. Keys are the camelCase names the client
+    /// translates (see <c>item.specs</c> in the client's locale files).
+    /// </summary>
+    private static readonly Dictionary<string, (string Key, string Value)[]> Specifications = new()
+    {
+        // Cameras
+        ["Sony Alpha 7 IV"] =
+        [
+            ("sensor", "Full-frame CMOS, 33 MP"), ("video", "4K 60p, 10-bit 4:2:2"), ("stabilisation", "5-axis in-body"),
+            ("mount", "Sony E"), ("weight", "658 g"), ("includes", "2 batteries, 128 GB card"),
+        ],
+        ["Canon EOS R6 Mark II"] =
+        [
+            ("sensor", "Full-frame CMOS, 24.2 MP"), ("video", "4K 60p, 10-bit"), ("stabilisation", "5-axis in-body, up to 8 stops"),
+            ("mount", "Canon RF"), ("weight", "670 g"),
+        ],
+        ["Nikon Z6 III"] =
+        [
+            ("sensor", "Full-frame partially stacked CMOS, 24.5 MP"), ("video", "6K 60p N-RAW, 4K 120p"), ("stabilisation", "5-axis in-body"),
+            ("mount", "Nikon Z"), ("weight", "760 g"),
+        ],
+        ["Fujifilm X-T5"] =
+        [
+            ("sensor", "APS-C X-Trans CMOS 5 HR, 40.2 MP"), ("video", "6.2K 30p, 4K 60p"), ("stabilisation", "5-axis in-body, up to 7 stops"),
+            ("mount", "Fujifilm X"), ("weight", "557 g"),
+        ],
+        ["GoPro HERO13 Black"] =
+        [
+            ("video", "5.3K 60p, 4K 120p"), ("resolution", "27 MP photos"), ("stabilisation", "HyperSmooth 6.0"),
+            ("waterproof", "10 m"), ("weight", "159 g"), ("includes", "Chest mount"),
+        ],
+
+        // Lenses
+        ["Sony FE 24-70mm f/2.8 GM II"] =
+        [
+            ("mount", "Sony E"), ("focalLength", "24–70 mm"), ("aperture", "f/2.8"), ("filterSize", "82 mm"), ("weight", "695 g"),
+        ],
+        ["Canon RF 70-200mm f/2.8 L IS USM"] =
+        [
+            ("mount", "Canon RF"), ("focalLength", "70–200 mm"), ("aperture", "f/2.8"), ("stabilisation", "Optical, up to 5 stops"),
+            ("filterSize", "77 mm"), ("weight", "1070 g"),
+        ],
+        ["Sigma 35mm f/1.4 DG DN Art (Sony E)"] =
+        [
+            ("mount", "Sony E"), ("focalLength", "35 mm"), ("aperture", "f/1.4"), ("filterSize", "67 mm"), ("weight", "645 g"),
+        ],
+        ["Sony FE 85mm f/1.8"] =
+        [
+            ("mount", "Sony E"), ("focalLength", "85 mm"), ("aperture", "f/1.8"), ("filterSize", "67 mm"), ("weight", "371 g"),
+        ],
+        ["Nikon Z 14-30mm f/4 S"] =
+        [
+            ("mount", "Nikon Z"), ("focalLength", "14–30 mm"), ("aperture", "f/4"), ("filterSize", "82 mm"), ("weight", "485 g"),
+        ],
+
+        // Drones
+        ["DJI Mini 4 Pro"] =
+        [
+            ("camera", "1/1.3-inch CMOS, 48 MP"), ("video", "4K 60p HDR, 4K 100p"), ("flightTime", "34 min"), ("range", "10 km (CE)"),
+            ("weight", "249 g"), ("includes", "3 batteries, charging hub, DJI RC 2"),
+        ],
+        ["DJI Air 3S"] =
+        [
+            ("camera", "1-inch CMOS 50 MP + 70 mm tele"), ("video", "4K 60p HDR"), ("flightTime", "45 min"), ("range", "10 km (CE)"),
+            ("weight", "724 g"),
+        ],
+        ["DJI Mavic 3 Pro"] =
+        [
+            ("camera", "Hasselblad 4/3 CMOS + 70 mm + 166 mm"), ("video", "5.1K 50p, 4K 120p"), ("flightTime", "43 min"),
+            ("range", "8 km (CE)"), ("weight", "958 g"),
+        ],
+        ["DJI Avata 2"] =
+        [
+            ("camera", "1/1.3-inch CMOS"), ("video", "4K 60p, 155° field of view"), ("flightTime", "23 min"), ("weight", "377 g"),
+            ("includes", "DJI Goggles 3, RC Motion 3"),
+        ],
+
+        // Audio
+        ["Rode Wireless PRO"] =
+        [
+            ("type", "2 transmitters, 1 receiver"), ("recording", "32-bit float on-board, 32 GB"), ("range", "260 m"),
+            ("battery", "Up to 7 h, 30 h with the case"), ("connectivity", "3.5 mm TRS, USB-C"),
+        ],
+        ["Zoom H6essential Recorder"] =
+        [
+            ("type", "6-track field recorder"), ("recording", "32-bit float, 96 kHz"), ("connectivity", "4 XLR/TRS inputs, USB-C"),
+            ("battery", "4 × AA, up to 8 h"),
+        ],
+        ["Shure SM7B"] =
+        [
+            ("type", "Dynamic, cardioid"), ("frequencyRange", "50 Hz – 20 kHz"), ("connectivity", "XLR"), ("weight", "765 g"),
+        ],
+        ["JBL PartyBox 310"] =
+        [
+            ("power", "240 W"), ("battery", "Up to 18 h"), ("connectivity", "Bluetooth 5.1, 2 mic/guitar inputs, USB"),
+            ("weight", "17.4 kg"),
+        ],
+        ["Sony WH-1000XM5"] =
+        [
+            ("type", "Over-ear, noise cancelling"), ("battery", "Up to 30 h"), ("connectivity", "Bluetooth 5.2, 3.5 mm"), ("weight", "250 g"),
+        ],
+
+        // Projectors
+        ["Epson EH-TW7100"] =
+        [
+            ("resolution", "4K enhancement, HDR10"), ("brightness", "3000 lm"), ("screenSize", "40–500 in"), ("speakers", "2 × 10 W"),
+            ("weight", "6.9 kg"),
+        ],
+        ["BenQ W2700i"] =
+        [
+            ("resolution", "4K UHD, HDR10/HLG"), ("brightness", "2000 ANSI lm"), ("screenSize", "30–200 in"), ("os", "Android TV"),
+            ("speakers", "2 × 5 W"), ("weight", "4.2 kg"),
+        ],
+        ["XGIMI Halo+"] =
+        [
+            ("resolution", "1080p"), ("brightness", "700 ANSI lm"), ("battery", "Up to 2.5 h of video"), ("os", "Android TV"),
+            ("speakers", "2 × 5 W Harman Kardon"), ("weight", "1.6 kg"),
+        ],
+        ["Samsung The Freestyle 2nd Gen"] =
+        [
+            ("resolution", "1080p"), ("brightness", "550 LED lm"), ("screenSize", "30–100 in"), ("os", "Tizen"),
+            ("speakers", "5 W, 360°"), ("weight", "0.8 kg"),
+        ],
+
+        // Laptops
+        ["Apple MacBook Pro 14\" M4 Pro"] =
+        [
+            ("cpu", "Apple M4 Pro, 12-core"), ("gpu", "16-core"), ("ram", "24 GB"), ("storage", "1 TB SSD"),
+            ("display", "14.2 in Liquid Retina XDR, 3024 × 1964, 120 Hz"), ("battery", "Up to 22 h"), ("os", "macOS"), ("weight", "1.6 kg"),
+        ],
+        ["Apple MacBook Air 13\" M3"] =
+        [
+            ("cpu", "Apple M3, 8-core"), ("gpu", "10-core"), ("ram", "16 GB"), ("storage", "512 GB SSD"),
+            ("display", "13.6 in Liquid Retina, 2560 × 1664"), ("battery", "Up to 18 h"), ("os", "macOS"), ("weight", "1.24 kg"),
+        ],
+        ["Dell XPS 13"] =
+        [
+            ("cpu", "Intel Core Ultra 7 155H"), ("gpu", "Intel Arc"), ("ram", "16 GB LPDDR5x"), ("storage", "512 GB SSD"),
+            ("display", "13.4 in, 1920 × 1200, 120 Hz"), ("os", "Windows 11"), ("weight", "1.19 kg"),
+        ],
+        ["Lenovo ThinkPad X1 Carbon Gen 12"] =
+        [
+            ("cpu", "Intel Core Ultra 7 155U"), ("gpu", "Intel Graphics"), ("ram", "32 GB"), ("storage", "1 TB SSD"),
+            ("display", "14 in, 1920 × 1200"), ("os", "Windows 11 Pro"), ("weight", "1.09 kg"),
+        ],
+        ["ASUS ROG Zephyrus G14"] =
+        [
+            ("cpu", "AMD Ryzen 9 8945HS"), ("gpu", "NVIDIA GeForce RTX 4070, 8 GB"), ("ram", "32 GB"), ("storage", "1 TB SSD"),
+            ("display", "14 in OLED, 2880 × 1800, 120 Hz"), ("os", "Windows 11"), ("weight", "1.5 kg"),
+        ],
+
+        // Gaming consoles
+        ["Sony PlayStation 5 Pro"] =
+        [
+            ("cpu", "AMD Zen 2, 8-core"), ("storage", "2 TB SSD"), ("resolution", "Up to 4K 120 Hz"), ("controllers", "2 × DualSense"),
+        ],
+        ["Microsoft Xbox Series X"] =
+        [
+            ("cpu", "AMD Zen 2, 8-core 3.8 GHz"), ("storage", "1 TB SSD"), ("resolution", "Up to 4K 120 Hz"),
+            ("controllers", "2 × Xbox Wireless Controller"), ("includes", "Game Pass Ultimate"),
+        ],
+        ["Nintendo Switch OLED"] =
+        [
+            ("display", "7 in OLED, 1280 × 720"), ("storage", "64 GB"), ("battery", "4.5–9 h"), ("controllers", "2 × Joy-Con"),
+        ],
+        ["Meta Quest 3"] =
+        [
+            ("cpu", "Snapdragon XR2 Gen 2"), ("display", "2064 × 2208 per eye, 120 Hz"), ("storage", "128 GB"),
+            ("battery", "Up to 2.2 h"), ("controllers", "2 × Touch Plus"), ("weight", "515 g"),
+        ],
+        ["Valve Steam Deck OLED"] =
+        [
+            ("cpu", "AMD APU, Zen 2 4-core"), ("ram", "16 GB LPDDR5"), ("storage", "512 GB SSD"),
+            ("display", "7.4 in HDR OLED, 1280 × 800, 90 Hz"), ("battery", "3–12 h"), ("os", "SteamOS"), ("weight", "640 g"),
+        ],
+    };
 }

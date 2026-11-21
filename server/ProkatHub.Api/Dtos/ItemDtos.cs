@@ -26,7 +26,14 @@ public sealed record ItemDetailsDto(
     decimal DailyPrice,
     decimal Deposit,
     decimal LateFeePerDay,
-    string? ImageUrl);
+    string? ImageUrl,
+    IReadOnlyList<ItemSpecificationDto> Specifications);
+
+/// <summary>
+/// One line of an item's specifications: a camelCase <c>Key</c> the client translates
+/// (<c>cpu</c>, <c>ram</c>, <c>sensor</c>, …) and the <c>Value</c> shown as written.
+/// </summary>
+public sealed record ItemSpecificationDto(string Key, string Value);
 
 /// <summary>Catalogue sort orders accepted by <c>GET /api/items?sort=</c>.</summary>
 public static class ItemSort
@@ -93,4 +100,5 @@ public sealed record ItemRequest(
     string? ImageUrl,
     decimal? DailyPrice,
     decimal? Deposit,
-    decimal? LateFeePerDay);
+    decimal? LateFeePerDay,
+    IReadOnlyList<ItemSpecificationDto>? Specifications = null);

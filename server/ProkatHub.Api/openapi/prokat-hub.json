@@ -1705,7 +1705,8 @@
           "dailyPrice",
           "deposit",
           "lateFeePerDay",
-          "imageUrl"
+          "imageUrl",
+          "specifications"
         ],
         "type": "object",
         "properties": {
@@ -1746,6 +1747,12 @@
               "null",
               "string"
             ]
+          },
+          "specifications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemSpecificationDto"
+            }
           }
         }
       },
@@ -1805,9 +1812,34 @@
             "minimum": 0,
             "type": "number",
             "format": "double"
+          },
+          "specifications": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ItemSpecificationDto"
+            }
           }
         },
         "description": "Body of `POST /api/items` and `PUT /api/items/{id}`."
+      },
+      "ItemSpecificationDto": {
+        "required": [
+          "key",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "description": "One line of an item's specifications: a camelCase `Key` the client translates\n(`cpu`, `ram`, `sensor`, …) and the `Value` shown as written."
       },
       "ItemSummaryDto": {
         "required": [

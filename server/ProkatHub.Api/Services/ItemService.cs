@@ -123,6 +123,9 @@ public sealed class ItemService(
         item.DailyPrice = request.DailyPrice!.Value;
         item.Deposit = request.Deposit!.Value;
         item.LateFeePerDay = request.LateFeePerDay!.Value;
+        item.Specifications = (request.Specifications ?? [])
+            .Select(s => new ItemSpecification { Key = s.Key.Trim(), Value = s.Value.Trim() })
+            .ToList();
     }
 
     private static NotFoundException NotFound(int id) => new($"Item {id} was not found.");

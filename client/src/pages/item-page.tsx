@@ -23,6 +23,7 @@ import { DateRangeCalendar } from '@/components/booking/date-range-calendar'
 import { QuoteCard } from '@/components/booking/quote-card'
 import { useBookItem } from '@/components/booking/use-book-item'
 import { categoryIcon } from '@/components/category-icon'
+import { ItemSpecifications } from '@/components/item-specifications'
 import { FormAlert } from '@/components/form-alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -184,21 +185,17 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
           <h1 className="mt-1 text-3xl font-bold tracking-[-0.025em] sm:text-4xl">{item.name}</h1>
           <p className="mt-3 max-w-160 text-muted-foreground sm:text-lg">{item.description}</p>
 
-          <dl className="mt-6 grid gap-4 sm:grid-cols-3">
-            {[
-              { label: t('item.dailyPrice'), value: formatPrice(item.dailyPrice) },
-              { label: t('item.deposit'), value: formatPrice(item.deposit) },
-              {
-                label: t('item.lateFee'),
-                value: t('item.perDay', { amount: formatPrice(item.lateFeePerDay) }),
-              },
-            ].map((fact) => (
-              <div key={fact.label} className="rounded-xl border bg-muted p-4">
-                <dt className="text-xs text-muted-foreground">{fact.label}</dt>
-                <dd className="mt-1 text-xl leading-7 font-bold tabular-nums">{fact.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <p className="mt-4 text-2xl leading-8 font-bold tabular-nums">
+            {formatPrice(item.dailyPrice)}{' '}
+            <span className="text-base font-normal text-muted-foreground">
+              {t('catalogue.perDay')}
+            </span>
+          </p>
+
+          {/* Deposit and late fee are in the booking column, next to the price they go with. */}
+          <div className="mt-8">
+            <ItemSpecifications specifications={item.specifications} />
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
@@ -232,6 +229,7 @@ function ItemDetails({ item }: { item: ItemDetailsDto }) {
             }
             loading={complete && quote.isFetching}
             error={quoteError}
+            deposit={item.deposit}
             lateFeePerDay={item.lateFeePerDay}
           >
             {/* Phones book from the bar pinned to the bottom instead. */}
