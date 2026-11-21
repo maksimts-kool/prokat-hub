@@ -100,8 +100,7 @@ export function RegisterPage() {
         <>
           {t('register.haveAccount')}{' '}
           <Link
-            to="/login"
-            state={location.state}
+            to={{ pathname: '/login', search: location.search }}
             className="font-medium text-primary hover:underline dark:text-accent-foreground"
           >
             {t('register.logIn')}

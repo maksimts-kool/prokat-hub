@@ -63,8 +63,7 @@ export function LoginPage() {
           {t('login.noAccount')}{' '}
           {/* Pass the return page along, so registering also leads back to it. */}
           <Link
-            to="/register"
-            state={location.state}
+            to={{ pathname: '/register', search: location.search }}
             className="font-medium text-primary hover:underline dark:text-accent-foreground"
           >
             {t('login.createAccount')}

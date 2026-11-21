@@ -6,6 +6,7 @@ import { useGetApiAuthMe, getGetApiAuthMeQueryKey } from '@/api/generated/auth/a
 import type { AuthResponse } from '@/api/generated/model'
 import { isApiError, onUnauthorized } from '@/api/http-client'
 import { AuthContext, type AuthContextValue, type AuthStatus } from '@/auth/auth-context'
+import { authPath } from '@/auth/return-path'
 import { hasAnyRole, type Role } from '@/auth/roles'
 import i18n from '@/i18n'
 import {
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // A token that fails on the first check after a reload just leaves the visitor a guest.
         if (!hadSession) return
         toast.error(i18n.t('errors.unauthorized'), { id: 'session-ended' })
-        void navigate('/login', { replace: true, state: { from: currentPath() } })
+        void navigate(authPath(currentPath()), { replace: true })
       }),
     [endSession, navigate],
   )

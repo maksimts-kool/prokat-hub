@@ -1,7 +1,8 @@
 import { LogIn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { useAuth } from '@/auth/auth-context'
+import { authPath } from '@/auth/return-path'
 import { AccountMenu } from '@/components/layout/account-menu'
 import { MainNav } from '@/components/layout/main-nav'
 import { MobileNav } from '@/components/layout/mobile-nav'
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils'
 export function SiteHeader() {
   const { t } = useTranslation()
   const { status } = useAuth()
+  const location = useLocation()
 
   return (
     <header className="sticky top-0 z-40 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
@@ -37,7 +39,8 @@ export function SiteHeader() {
               size="lg"
               className={cn('rounded-full px-4', status === 'loading' && 'invisible')}
             >
-              <Link to="/login">
+              {/* After logging in, come back to this page. */}
+              <Link to={authPath(location.pathname + location.search)}>
                 <LogIn aria-hidden />
                 {t('layout.logIn')}
               </Link>

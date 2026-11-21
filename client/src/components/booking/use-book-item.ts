@@ -15,7 +15,7 @@ import {
 } from '@/api/generated/rentals/rentals'
 import { isApiError } from '@/api/http-client'
 import { useAuth } from '@/auth/auth-context'
-import type { LoginLocationState } from '@/auth/return-path'
+import { authPath } from '@/auth/return-path'
 import { pageRoles } from '@/auth/roles'
 import { useFormat } from '@/i18n/format'
 import { bookingDatesError } from '@/lib/booking-schema'
@@ -61,8 +61,7 @@ export function useBookItem(itemId: number, itemName: string) {
   function book(dates: { from?: string; to?: string }) {
     if (access === 'guest') {
       // The item page keeps its dates in the URL, so the user comes back to the same choice.
-      const state: LoginLocationState = { from: location.pathname + location.search }
-      void navigate('/login', { state })
+      void navigate(authPath(location.pathname + location.search))
       return
     }
     if (access !== 'customer' || create.isPending) return

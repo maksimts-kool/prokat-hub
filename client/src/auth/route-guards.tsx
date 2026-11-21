@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAuth } from '@/auth/auth-context'
-import { type LoginLocationState, returnPathFrom } from '@/auth/return-path'
+import { authPath, returnPathFrom } from '@/auth/return-path'
 import { homePathFor, type Role } from '@/auth/roles'
 import { PageLoader } from '@/components/page-loader'
 import { ForbiddenPage } from '@/pages/forbidden-page'
@@ -23,10 +23,7 @@ export function RequireAuth({ roles }: RequireAuthProps) {
   }
 
   if (status === 'guest') {
-    const state: LoginLocationState = {
-      from: location.pathname + location.search + location.hash,
-    }
-    return <Navigate to="/login" replace state={state} />
+    return <Navigate to={authPath(location.pathname + location.search + location.hash)} replace />
   }
 
   if (roles && !hasRole(...roles)) {
@@ -49,7 +46,7 @@ export function GuestOnly() {
   }
 
   if (user) {
-    return <Navigate to={returnPathFrom(location.state) ?? homePathFor(user.roles)} replace />
+    return <Navigate to={returnPathFrom(location.search) ?? homePathFor(user.roles)} replace />
   }
 
   return <Outlet />
