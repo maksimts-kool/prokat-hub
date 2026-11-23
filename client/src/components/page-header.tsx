@@ -1,5 +1,5 @@
 import { ChevronRight, House, type LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
@@ -9,8 +9,17 @@ export interface PageHeaderStat {
   label: string
 }
 
+export interface Crumb {
+  label: string
+  to: string
+}
+
 interface PageHeaderProps {
   title: string
+  /** Pages between home and this one in the breadcrumb, e.g. the dashboard above My rentals. */
+  trail?: Crumb[]
+  /** This page's name in the breadcrumb when it differs from the title, e.g. under a greeting. */
+  crumb?: string
   description?: ReactNode
   /** Real counts shown under the description, e.g. "33 items". */
   stats?: PageHeaderStat[]
@@ -22,7 +31,14 @@ interface PageHeaderProps {
  * The dark band at the top of an inner page: breadcrumb, title, description, a row of stats
  * and a page illustration. It has no buttons: the page's actions live in its content below.
  */
-export function PageHeader({ title, description, stats, illustration }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  trail,
+  crumb,
+  description,
+  stats,
+  illustration,
+}: PageHeaderProps) {
   const { t } = useTranslation()
 
   return (
@@ -39,10 +55,25 @@ export function PageHeader({ title, description, stats, illustration }: PageHead
                 <House className="size-5" aria-hidden />
               </Link>
             </li>
+            {trail?.map((crumb) => (
+              <Fragment key={crumb.to}>
+                <li aria-hidden>
+                  <ChevronRight className="size-4" />
+                </li>
+                <li>
+                  <Link
+                    to={crumb.to}
+                    className="rounded-sm outline-none hover:text-band-foreground focus-visible:ring-3 focus-visible:ring-band-accent"
+                  >
+                    {crumb.label}
+                  </Link>
+                </li>
+              </Fragment>
+            ))}
             <li aria-hidden>
               <ChevronRight className="size-4" />
             </li>
-            <li aria-current="page">{title}</li>
+            <li aria-current="page">{crumb ?? title}</li>
           </ol>
         </nav>
 

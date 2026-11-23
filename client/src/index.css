@@ -25,6 +25,10 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-success-foreground: var(--success-foreground);
   --color-highlight: var(--highlight);
   --color-highlight-foreground: var(--highlight-foreground);
   --color-on-highlight: var(--on-highlight);
@@ -89,6 +93,11 @@
   --band-accent: #a68bff;
   --band-accent-strong: #7b61ff;
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
+  /* Success: green-600 for dots and icons, green-700 behind the Returned status and success badges. */
+  --success: #16a34a;
+  --success-strong: #15803d;
+  --success-foreground: #ffffff;
   --border: #ebebeb;
   --input: #e2e2e2;
   --ring: #5937e0;
@@ -127,6 +136,10 @@
   --highlight-foreground: #232323;
   --on-highlight: #232323;
   --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: #232323;
+  --success: #16a34a;
+  --success-strong: #15803d;
+  --success-foreground: #ffffff;
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: #7b61ff;

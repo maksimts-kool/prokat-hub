@@ -1,7 +1,9 @@
-import { ChevronDown, LogOut } from 'lucide-react'
+import { ChevronDown, LayoutDashboard, LogOut } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { useAuth } from '@/auth/auth-context'
-import { primaryRole } from '@/auth/roles'
+import { pageRoles, primaryRole } from '@/auth/roles'
+import { initialsOf } from '@/lib/initials'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,20 +13,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-/** "Kristi Customer" → "KC"; one word gives one letter. */
-function initialsOf(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word.charAt(0).toUpperCase())
-    .join('')
-}
-
-/** The signed-in user's chip in the header (avatar, name, role) with a menu to log out. */
+/** The signed-in user's chip in the header (avatar, name, role) with a menu: the dashboard and log out. */
 export function AccountMenu() {
   const { t } = useTranslation()
-  const { user, signOut } = useAuth()
+  const { user, signOut, hasRole } = useAuth()
   if (!user) return null
 
   const role = primaryRole(user.roles)
@@ -59,6 +51,17 @@ export function AccountMenu() {
           {roleLabel && <span className="font-normal">{roleLabel}</span>}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {hasRole(...pageRoles.dashboard) && (
+          <>
+            <DropdownMenuItem asChild className="px-2 py-1.5">
+              <Link to="/dashboard">
+                <LayoutDashboard aria-hidden />
+                {t('account.dashboard')}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem onSelect={signOut} className="px-2 py-1.5">
           <LogOut aria-hidden />
           {t('account.logOut')}

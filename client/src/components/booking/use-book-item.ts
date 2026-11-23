@@ -84,7 +84,7 @@ export function useBookItem(itemId: number, itemName: string) {
           // Search results by date and the popularity order both change with a new booking.
           void queryClient.invalidateQueries({ queryKey: getGetApiItemsQueryKey() })
           void refreshAvailability()
-          void navigate('/rentals')
+          void navigate('/dashboard/rentals')
         },
         onError: (error) => {
           if (isApiError(error) && error.status === 409) void refreshAvailability()

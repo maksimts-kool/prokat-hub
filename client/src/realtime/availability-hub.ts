@@ -14,7 +14,12 @@ import type {
   GetApiItemsParams,
   GetApiRentalsQuoteParams,
 } from '@/api/generated/model'
-import { getGetApiRentalsQuoteQueryKey } from '@/api/generated/rentals/rentals'
+import {
+  getGetApiRentalsMyQueryKey,
+  getGetApiRentalsOverdueQueryKey,
+  getGetApiRentalsQueryKey,
+  getGetApiRentalsQuoteQueryKey,
+} from '@/api/generated/rentals/rentals'
 import { getAccessToken } from '@/lib/auth-token'
 import { apiUrl } from '@/lib/config'
 
@@ -60,6 +65,12 @@ export function createAvailabilityConnection(): HubConnection {
 
 const itemsKey = getGetApiItemsQueryKey()[0]
 const quoteKey = getGetApiRentalsQuoteQueryKey()[0]
+/** Rental lists in the dashboard: a change is a booking, cancel, pickup or return, so they all reload. */
+const rentalListKeys = new Set<unknown>([
+  getGetApiRentalsMyQueryKey()[0],
+  getGetApiRentalsQueryKey()[0],
+  getGetApiRentalsOverdueQueryKey()[0],
+])
 const availabilityKey = /^\/api\/items\/\d+\/availability$/
 
 /** True when two inclusive `yyyy-MM-dd` ranges share a day. Missing dates count as unbounded. */
@@ -73,7 +84,8 @@ function overlaps(from: string | undefined, to: string | undefined, change: Avai
  *
  * - the item's booked days (`GET /api/items/{id}/availability`) for overlapping dates;
  * - quotes for the item and overlapping dates, which fail once the dates are taken;
- * - catalogue lists searched by overlapping dates (their `isAvailable` flags) or sorted by popularity.
+ * - catalogue lists searched by overlapping dates (their `isAvailable` flags) or sorted by popularity;
+ * - the dashboard's rental lists, whose statuses may have changed.
  */
 export function isAffectedByAvailabilityChange(
   query: Pick<Query, 'queryKey'>,
@@ -81,6 +93,8 @@ export function isAffectedByAvailabilityChange(
 ): boolean {
   const [path, params] = query.queryKey as [unknown, Record<string, unknown> | undefined]
   if (typeof path !== 'string') return false
+
+  if (rentalListKeys.has(path)) return true
 
   if (availabilityKey.test(path)) {
     if (!change) return true

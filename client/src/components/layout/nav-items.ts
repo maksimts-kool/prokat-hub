@@ -1,13 +1,6 @@
-import {
-  CalendarCheck,
-  ChartColumn,
-  ClipboardList,
-  House,
-  LayoutGrid,
-  type LucideIcon,
-} from 'lucide-react'
+import { House, LayoutGrid, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/auth/auth-context'
-import { pageRoles, type Role } from '@/auth/roles'
+import type { Role } from '@/auth/roles'
 import type { Translations } from '@/i18n/locales/en'
 
 export interface NavItem {
@@ -19,12 +12,10 @@ export interface NavItem {
   roles?: readonly Role[]
 }
 
+/** The public pages. Signed-in pages live in the dashboard, opened from the account menu. */
 export const navItems: NavItem[] = [
   { to: '/', labelKey: 'home', icon: House },
   { to: '/catalogue', labelKey: 'catalogue', icon: LayoutGrid },
-  { to: '/rentals', labelKey: 'rentals', icon: CalendarCheck, roles: pageRoles.rentals },
-  { to: '/desk', labelKey: 'desk', icon: ClipboardList, roles: pageRoles.desk },
-  { to: '/reports', labelKey: 'reports', icon: ChartColumn, roles: pageRoles.reports },
 ]
 
 /** The navigation links the current user may open. */

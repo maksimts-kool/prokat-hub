@@ -61,11 +61,14 @@ Every request goes through `apiFetch` in `src/api/http-client.ts`. It prefixes `
 | --------------------- | ------------------------------------ |
 | `/`, `/catalogue`     | Everyone                             |
 | `/login`, `/register` | Guests (signed-in users are sent on) |
-| `/rentals`            | Customer                             |
-| `/desk`               | Staff, Admin                         |
-| `/reports`            | Admin                                |
+| `/dashboard`          | Customer, Staff, Admin               |
+| `/dashboard/rentals`  | Customer                             |
+| `/dashboard/desk`     | Staff, Admin                         |
+| `/dashboard/reports`  | Admin                                |
 
-The roles per page live in `pageRoles` (`src/auth/roles.ts`): the router guards routes with `RequireAuth` and the navigation shows only the links the user may open. A guest opening a protected page goes to `/login` and returns afterwards; a signed-in user without the role sees a "No access" page. When a request sent with the token gets 401, the session ends and the user is sent to `/login`.
+The header links only to the public pages; signed-in pages live in the dashboard (`src/pages/dashboard/`), opened from **Dashboard** in the account menu. Its sidebar shows each role's sections and the band at the top shows the user's own numbers. The old `/rentals`, `/desk` and `/reports` addresses redirect into it.
+
+The roles per page live in `pageRoles` (`src/auth/roles.ts`): the router guards routes with `RequireAuth` and the dashboard sidebar shows only the sections the user may open. A guest opening a protected page goes to `/login` and returns afterwards; a signed-in user without the role sees a "No access" page. When a request sent with the token gets 401, the session ends and the user is sent to `/login`.
 
 Forms use React Hook Form with Zod schemas that repeat the server's rules; server field errors from a 400 response are shown next to their fields.
 
