@@ -1,6 +1,6 @@
 # client
 
-The Prokat Hub web client: React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, React Router, TanStack Query with an Orval-generated API client, Lucide icons and Sonner toasts.
+The Prokat Hub web client: React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, React Router, TanStack Query with an Orval-generated API client, TanStack Table, Lucide icons and Sonner toasts.
 
 ## Run
 
@@ -66,7 +66,9 @@ Every request goes through `apiFetch` in `src/api/http-client.ts`. It prefixes `
 | `/dashboard/desk`     | Staff, Admin                         |
 | `/dashboard/reports`  | Admin                                |
 
-The header links only to the public pages; signed-in pages live in the dashboard (`src/pages/dashboard/`), opened from **Dashboard** in the account menu. Its sidebar shows each role's sections and the band at the top shows the user's own numbers. The old `/rentals`, `/desk` and `/reports` addresses redirect into it.
+The header links only to the public pages; signed-in pages live in the dashboard (`src/pages/dashboard/`), opened from **Dashboard** in the account menu. Its sidebar shows each role's sections and the band at the top names the section. The old `/rentals`, `/desk` and `/reports` addresses redirect into it.
+
+The rental desk (`src/pages/dashboard/desk/`) lists rentals in a TanStack Table, shown as cards on phones: today's pickups, rentals out now, overdue rentals (`GET /api/rentals/overdue`) and all rentals filtered by status and dates. Its tab, filters and page are in the URL. Issue, Receive and Mark late each open a confirmation that says what the customer is charged; Issue and Receive take an optional note for the status history. Which buttons a rental gets follows the API's rules in `desk-actions.ts`.
 
 The roles per page live in `pageRoles` (`src/auth/roles.ts`): the router guards routes with `RequireAuth` and the dashboard sidebar shows only the sections the user may open. A guest opening a protected page goes to `/login` and returns afterwards; a signed-in user without the role sees a "No access" page. When a request sent with the token gets 401, the session ends and the user is sent to `/login`.
 

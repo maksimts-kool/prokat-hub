@@ -373,7 +373,82 @@ export const et: Translations = {
     },
   },
   desk: {
-    placeholder: 'Väljastamine, vastuvõtmine ja hilinenud laenutused tulevad ülesandes #31.',
+    tabsLabel: 'Laenutuste nimekirjad',
+    tabs: {
+      pickups: 'Täna väljastada',
+      out: 'Praegu väljas',
+      overdue: 'Hilinenud',
+      all: 'Kõik laenutused',
+    },
+    columns: {
+      rental: 'Laenutus',
+      customer: 'Klient',
+      dates: 'Kuupäevad',
+      status: 'Olek',
+      amount: 'Summa',
+      actions: 'Toimingud',
+    },
+    actions: {
+      issue: 'Väljasta',
+      receive: 'Võta vastu',
+      markLate: 'Märgi hilinenuks',
+    },
+    when: {
+      startsToday: 'Algab täna',
+      startsOn: 'Algab {{date}}',
+      missed: 'Jäi kätte saamata',
+      dueToday: 'Tagastus täna',
+      late_one: '{{count}} päev hiljaks jäänud',
+      late_other: '{{count}} päeva hiljaks jäänud',
+    },
+    lateFees: 'Viivised {{amount}}',
+    summary: 'Kuvatakse {{from}}–{{to}}, kokku {{count}} laenutust',
+    overdueHint:
+      'Taustateenus märgib hilinenud laenutused ja lisab päeva viivise iga tunni järel. „Märgi hilinenuks” teeb seda kohe.',
+    filters: {
+      status: 'Olek',
+      allStatuses: 'Kõik olekud',
+      from: 'Alates',
+      to: 'Kuni',
+      reset: 'Lähtesta',
+      hint: 'Näitab laenutusi, millel on mõni päev nende kuupäevade vahel.',
+      reversed: '„Kuni” on enne kuupäeva „Alates”. Muuda üht neist.',
+    },
+    empty: {
+      pickups: 'Täna pole midagi väljastada',
+      out: 'Praegu pole midagi väljas',
+      overdue: 'Hilinenud laenutusi pole',
+      all: 'Nende filtritega laenutusi pole',
+    },
+    confirm: {
+      issueTitle: 'Kas väljastada {{item}}?',
+      issueText: 'Kliendile {{customer}}, {{dates}}. Võta enne üleandmist tagatisraha {{deposit}}.',
+      issuePlaceholder: 'Näiteks: seerianumber kontrollitud, kõik osad karbis',
+      receiveTitle: 'Kas võtta vastu {{item}}?',
+      receiveText: 'Kliendilt {{customer}}, õigel ajal. Maksa tagatisraha {{deposit}} tagasi.',
+      receiveLate_one:
+        'Kliendilt {{customer}}, {{count}} päev hiljem. Viivised kokku {{total}} ({{perDay}} päevas).',
+      receiveLate_other:
+        'Kliendilt {{customer}}, {{count}} päeva hiljem. Viivised kokku {{total}} ({{perDay}} päevas).',
+      receivePlaceholder: 'Näiteks: tagastati heas korras',
+      markLateTitle: 'Kas märkida {{item}} hilinenuks?',
+      markLateText_one:
+        'Tähtaeg oli {{date}}. Seni {{count}} hilinenud päeva eest arvestatakse {{perDay}}, kokku {{total}}. Juba arvestatud päevi uuesti ei arvestata.',
+      markLateText_other:
+        'Tähtaeg oli {{date}}. Seni {{count}} hilinenud päeva eest arvestatakse {{perDay}} päevas, kokku {{total}}. Juba arvestatud päevi uuesti ei arvestata.',
+      note: 'Märkus (valikuline)',
+      back: 'Tagasi',
+      saving: 'Salvestan…',
+    },
+    done: {
+      issued: '{{item}} on väljastatud kliendile {{customer}}.',
+      received: '{{item}} on vastu võetud.',
+      markedLate: '{{item}} on märgitud hilinenuks ja viivised on ajakohased.',
+    },
+    errors: {
+      conflict:
+        'Seda laenutust muudeti vahepeal, seega nimekiri laaditi uuesti. Kontrolli ja proovi uuesti.',
+    },
   },
   reports: {
     placeholder: 'Populaarsete esemete aruanne tuleb ülesandes #33.',

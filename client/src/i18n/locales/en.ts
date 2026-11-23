@@ -376,7 +376,83 @@ export const en = {
     },
   },
   desk: {
-    placeholder: 'Issuing, receiving and overdue rentals are built in #31.',
+    tabsLabel: 'Rental lists',
+    tabs: {
+      pickups: 'Pickups today',
+      out: 'Out now',
+      overdue: 'Overdue',
+      all: 'All rentals',
+    },
+    columns: {
+      rental: 'Rental',
+      customer: 'Customer',
+      dates: 'Dates',
+      status: 'Status',
+      amount: 'Total',
+      actions: 'Actions',
+    },
+    actions: {
+      issue: 'Issue',
+      receive: 'Receive',
+      markLate: 'Mark late',
+    },
+    when: {
+      startsToday: 'Starts today',
+      startsOn: 'Starts {{date}}',
+      missed: 'Not picked up',
+      dueToday: 'Due back today',
+      late_one: '{{count}} day late',
+      late_other: '{{count}} days late',
+    },
+    lateFees: 'Late fees {{amount}}',
+    summary: 'Showing {{from}}–{{to}} of {{count}} rentals',
+    overdueHint:
+      'The worker marks overdue rentals and adds the day’s late fee every hour. Mark late does it now.',
+    filters: {
+      status: 'Status',
+      allStatuses: 'All statuses',
+      from: 'From',
+      to: 'To',
+      reset: 'Reset',
+      hint: 'Shows rentals with any day between the two dates.',
+      reversed: 'The “To” date is before the “From” date. Change one of them.',
+    },
+    empty: {
+      pickups: 'No pickups today',
+      out: 'Nothing is out right now',
+      overdue: 'Nothing is overdue',
+      all: 'No rentals match these filters',
+    },
+    confirm: {
+      issueTitle: 'Issue {{item}}?',
+      issueText:
+        'To {{customer}} for {{dates}}. Take the deposit of {{deposit}} before handing it over.',
+      issuePlaceholder: 'For example: serial number checked, all parts in the box',
+      receiveTitle: 'Receive {{item}}?',
+      receiveText: 'From {{customer}}, on time. Refund the deposit of {{deposit}}.',
+      receiveLate_one:
+        'From {{customer}}, {{count}} day late. Late fees come to {{total}} ({{perDay}} a day).',
+      receiveLate_other:
+        'From {{customer}}, {{count}} days late. Late fees come to {{total}} ({{perDay}} a day).',
+      receivePlaceholder: 'For example: returned in good condition',
+      markLateTitle: 'Mark {{item}} late?',
+      markLateText_one:
+        'It was due {{date}}. This charges {{perDay}} for the {{count}} late day so far, {{total}} in all. Days already charged are not charged again.',
+      markLateText_other:
+        'It was due {{date}}. This charges {{perDay}} for each of the {{count}} late days so far, {{total}} in all. Days already charged are not charged again.',
+      note: 'Note (optional)',
+      back: 'Go back',
+      saving: 'Saving…',
+    },
+    done: {
+      issued: '{{item}} is issued to {{customer}}.',
+      received: '{{item}} is received.',
+      markedLate: '{{item}} is marked late and its late fees are up to date.',
+    },
+    errors: {
+      conflict:
+        'This rental changed in the meantime, so the list is reloaded. Check it and try again.',
+    },
   },
   reports: {
     placeholder: 'The popular items report is built in #33.',
