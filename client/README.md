@@ -1,6 +1,6 @@
 # client
 
-The Prokat Hub web client: React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, React Router, TanStack Query with an Orval-generated API client, TanStack Table, Lucide icons and Sonner toasts.
+The Prokat Hub web client: React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, React Router, TanStack Query with an Orval-generated API client, TanStack Table, Recharts, Lucide icons and Sonner toasts.
 
 ## Run
 
@@ -72,6 +72,8 @@ The header links only to the public pages; signed-in pages live in the dashboard
 The rental desk (`src/pages/dashboard/desk/`) lists rentals in a TanStack Table, shown as cards on phones: today's pickups, rentals out now, overdue rentals (`GET /api/rentals/overdue`) and all rentals filtered by status and dates. Its tab, filters and page are in the URL. Issue, Receive and Mark late each open a confirmation that says what the customer is charged; Issue and Receive take an optional note for the status history. Which buttons a rental gets follows the API's rules in `desk-actions.ts`.
 
 Catalogue management (`src/pages/dashboard/catalogue/`) has two tabs. **Items** is a TanStack Table of the catalogue with search, a category filter and pages in the URL; Add and Edit open one dialog with every field of the item, its prices and its specifications (editing loads the full item first), and Retire takes the item out of the catalogue while its rentals keep it. **Categories** lists each category with its item count; a category that still has items can't be deleted. The Zod schemas in `catalogue-schemas.ts` repeat the server's validators, and server errors (400 field rules, or a 409 for a category name or slug in use) are shown next to their fields.
+
+The popular items report (`src/pages/dashboard/reports/`, `GET /api/reports/popular-items`) counts rentals that start in a period (this month, last month, the last 90 days, this year, all time or custom dates) and leaves cancelled bookings out. It shows the period's rentals and revenue, a Recharts bar chart of the top 5, 10 or 20 items by rentals or by revenue with each item's numbers on hover, and the same items in a table with the days rented and the late fee part of the revenue. The period, the number of items and the chart's metric are in the URL.
 
 The roles per page live in `pageRoles` (`src/auth/roles.ts`): the router guards routes with `RequireAuth` and the dashboard sidebar shows only the sections the user may open. A guest opening a protected page goes to `/login` and returns afterwards; a signed-in user without the role sees a "No access" page. When a request sent with the token gets 401, the session ends and the user is sent to `/login`.
 

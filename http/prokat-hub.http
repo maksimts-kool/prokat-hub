@@ -423,3 +423,19 @@ Content-Type: application/json
   "deposit": 0,
   "lateFeePerDay": 0
 }
+
+### Popular items, all time (Admin) → 200, most rentals first, with revenue including late fees
+GET {{baseUrl}}/api/reports/popular-items?top=5
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+
+### Popular items for November (Admin) → 200; rentals that start in the range count
+GET {{baseUrl}}/api/reports/popular-items?from=2026-11-01&to=2026-11-30&top=10
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+
+### Popular items with only one date → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/reports/popular-items?from=2026-11-01
+Authorization: Bearer {{adminLogin.response.body.accessToken}}
+
+### Popular items as customer → 403
+GET {{baseUrl}}/api/reports/popular-items
+Authorization: Bearer {{customerLogin.response.body.accessToken}}
