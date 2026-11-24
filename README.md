@@ -141,6 +141,16 @@ deploy/zone/deploy.sh            # starts both apps
 
 Register both PM2 files in MyZone (PM2 rakendused), so Zone keeps the apps running after a server restart.
 
+The app's settings live in the `env` of those PM2 files on the server. Nested settings use `__` in place of `:`, for example `Seed__DemoData` or `Overdue__Interval`. To change them:
+
+```bash
+deploy/zone/edit-env.sh          # API settings: opens nano on the server, checks the JSON, reloads the app
+deploy/zone/edit-env.sh worker   # worker settings
+deploy/zone/db-query.sh "SELECT Email FROM AspNetUsers"   # SQL against the live database
+```
+
+Edits survive later deploys. `deploy.sh` only rewrites the address, path, database and CORS settings that come from `zone.env`, and the worker's login. Set a seed account's password to `""` to stop the API from recreating that account. After changing `DB_PASSWORD`, run `deploy.sh` so the connection string is rebuilt.
+
 ## Continuous integration
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and on pull requests to `main`, with three jobs:
