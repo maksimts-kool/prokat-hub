@@ -77,7 +77,7 @@ EOF
 fi
 
 echo "==> Starting or reloading the apps"
-ssh "$ZONE_SSH" "pm2 startOrReload '$REMOTE_DIR/api.pm2.json' && pm2 startOrReload '$REMOTE_DIR/worker.pm2.json' && pm2 save --force >/dev/null"
+ssh "$ZONE_SSH" "pm2 startOrReload '$REMOTE_DIR/api.pm2.json' --update-env && pm2 startOrReload '$REMOTE_DIR/worker.pm2.json' --update-env && pm2 save --force >/dev/null"
 
 echo "==> Waiting for $SITE_ORIGIN$BASE_PATH/health"
 for _ in $(seq 1 30); do

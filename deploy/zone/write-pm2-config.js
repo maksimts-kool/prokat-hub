@@ -17,6 +17,8 @@ const oldWorker = read(workerFile)
 // Seed passwords need upper case, lower case and a digit.
 const password = () => 'Pk' + crypto.randomBytes(9).toString('hex') + '7'
 const keep = (value, make) => value || make()
+// A seed password set to "" on the server turns that account off (the API skips it), so it stays "".
+const keepSeed = (value) => (value === '' ? '' : keep(value, password))
 
 const dbPassword = keep(oldApi.DB_PASSWORD, () => '__SET_DB_PASSWORD__')
 const servicePassword = keep(oldApi.Seed__Accounts__Service__Password, password)
@@ -36,9 +38,9 @@ const apiEnv = {
   Jwt__SigningKey: keep(oldApi.Jwt__SigningKey, () => crypto.randomBytes(48).toString('base64')),
   Cors__AllowedOrigins__0: s.siteOrigin,
   Seed__DemoData: 'true',
-  Seed__Accounts__Admin__Password: keep(oldApi.Seed__Accounts__Admin__Password, password),
-  Seed__Accounts__Staff__Password: keep(oldApi.Seed__Accounts__Staff__Password, password),
-  Seed__Accounts__Customer__Password: keep(oldApi.Seed__Accounts__Customer__Password, password),
+  Seed__Accounts__Admin__Password: keepSeed(oldApi.Seed__Accounts__Admin__Password),
+  Seed__Accounts__Staff__Password: keepSeed(oldApi.Seed__Accounts__Staff__Password),
+  Seed__Accounts__Customer__Password: keepSeed(oldApi.Seed__Accounts__Customer__Password),
   Seed__Accounts__Service__Password: servicePassword,
 }
 
