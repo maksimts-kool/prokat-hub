@@ -63,8 +63,9 @@ public sealed class DatabaseInitializer(
                 continue;
             }
 
-            if (await userManager.FindByEmailAsync(account.Email) is not null)
+            if (await userManager.FindByEmailAsync(account.Email) is { } existing)
             {
+                await SyncPasswordAsync(existing, role, account.Password);
                 continue;
             }
 
@@ -80,6 +81,34 @@ public sealed class DatabaseInitializer(
             ThrowIfFailed(await userManager.AddToRoleAsync(user, role), $"add {role} role");
             logger.LogInformation("Created {Role} account {Email}", role, account.Email);
         }
+    }
+
+    /// <summary>
+    /// The configured password is the seed account's password: after it is changed in config, the account gets
+    /// it on the next start. A password that breaks the password rules is logged and the old one is kept.
+    /// </summary>
+    private async Task SyncPasswordAsync(AppUser user, string role, string password)
+    {
+        if (await userManager.CheckPasswordAsync(user, password))
+        {
+            return;
+        }
+
+        foreach (var validator in userManager.PasswordValidators)
+        {
+            var result = await validator.ValidateAsync(userManager, user, password);
+            if (!result.Succeeded)
+            {
+                logger.LogError("The configured {Role} password breaks the password rules ({Errors}); the {Role} account keeps its old password",
+                    role, string.Join(" ", result.Errors.Select(e => e.Description)), role);
+                return;
+            }
+        }
+
+        user.PasswordHash = userManager.PasswordHasher.HashPassword(user, password);
+        // A new security stamp also saves the user.
+        ThrowIfFailed(await userManager.UpdateSecurityStampAsync(user), $"update {role} password");
+        logger.LogInformation("Updated the {Role} account's password from config", role);
     }
 
     private async Task EnsureDiscountTiersAsync(CancellationToken cancellationToken)

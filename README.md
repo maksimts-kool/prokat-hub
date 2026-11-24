@@ -149,7 +149,7 @@ deploy/zone/edit-env.sh worker   # worker settings
 deploy/zone/db-query.sh "SELECT Email FROM AspNetUsers"   # SQL against the live database
 ```
 
-Edits survive later deploys. `deploy.sh` only rewrites the address, path, database and CORS settings that come from `zone.env`, and the worker's login. Set a seed account's password to `""` to stop the API from recreating that account. After changing `DB_PASSWORD`, run `deploy.sh` so the connection string is rebuilt.
+Edits survive later deploys. `deploy.sh` only rewrites the address, path, database and CORS settings that come from `zone.env`, and the worker's login. A changed `Seed__Accounts__<Role>__Password` is applied to that account when the API restarts; a password that breaks the password rules is logged and ignored. Set it to `""` to stop the API from recreating the account. The worker gets the Service password on the next `deploy.sh`. After changing `DB_PASSWORD`, run `deploy.sh` so the connection string is rebuilt.
 
 ## Continuous integration
 
