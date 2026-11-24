@@ -99,12 +99,12 @@ public sealed class CategoryService(ICategoryRepository categories, ILogger<Cate
         var (nameTaken, slugTaken) = await categories.FindDuplicatesAsync(name, slug, exceptId, cancellationToken);
         if (nameTaken)
         {
-            throw new ConflictException($"A category named '{name}' already exists.");
+            throw new ConflictException($"A category named '{name}' already exists.", nameof(CategoryRequest.Name));
         }
 
         if (slugTaken)
         {
-            throw new ConflictException($"A category with the slug '{slug}' already exists.");
+            throw new ConflictException($"A category with the slug '{slug}' already exists.", nameof(CategoryRequest.Slug));
         }
 
         return (name, slug, description);

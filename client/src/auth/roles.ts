@@ -22,6 +22,8 @@ export const pageRoles = {
   rentals: [Role.Customer],
   /** Issuing and receiving items: `StaffDesk`. */
   desk: [Role.Staff, Role.Admin],
+  /** Items and categories: `Admin`. */
+  catalogue: [Role.Admin],
   /** Reports: `Admin`. */
   reports: [Role.Admin],
 } as const satisfies Record<string, readonly Role[]>

@@ -1,4 +1,5 @@
 import {
+  Boxes,
   CalendarCheck,
   ChartColumn,
   ClipboardList,
@@ -28,6 +29,7 @@ export const dashboardNavItems: DashboardNavItem[] = [
   { to: '/dashboard', section: 'overview', icon: LayoutDashboard },
   { to: '/dashboard/rentals', section: 'rentals', icon: CalendarCheck, roles: pageRoles.rentals },
   { to: '/dashboard/desk', section: 'desk', icon: ClipboardList, roles: pageRoles.desk },
+  { to: '/dashboard/catalogue', section: 'catalogue', icon: Boxes, roles: pageRoles.catalogue },
   { to: '/dashboard/reports', section: 'reports', icon: ChartColumn, roles: pageRoles.reports },
 ]
 

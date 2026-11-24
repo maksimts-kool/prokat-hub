@@ -22,7 +22,8 @@ export function apiErrorMessage(error: unknown): string {
 }
 
 /**
- * The first server message for each of `fields` in a 400 ValidationProblemDetails response.
+ * The first server message for each of `fields` in a 400 ValidationProblemDetails response, or a
+ * 409 about one field (such as a category name in use), which lists its message the same way.
  * The API names fields in PascalCase (`FullName`), so they are matched without regard to case.
  */
 export function serverFieldErrors<TField extends string>(
@@ -30,13 +31,30 @@ export function serverFieldErrors<TField extends string>(
   fields: readonly TField[],
 ): Partial<Record<TField, string>> {
   const result: Partial<Record<TField, string>> = {}
-  if (!isApiError(error) || error.status !== 400 || !error.problem?.errors) return result
+  for (const [path, message] of Object.entries(serverErrorsByPath(error))) {
+    const field = fields.find((name) => name.toLowerCase() === path.toLowerCase())
+    if (field && !result[field]) result[field] = message
+  }
+  return result
+}
+
+/**
+ * Every field message of a 400 or 409 response, keyed by its React Hook Form path:
+ * `Specifications[1].Key` becomes `specifications.1.key`. Only the first message of a field is kept.
+ */
+export function serverErrorsByPath(error: unknown): Record<string, string> {
+  const result: Record<string, string> = {}
+  if (!isApiError(error) || (error.status !== 400 && error.status !== 409)) return result
+  if (!error.problem?.errors) return result
 
   for (const [key, messages] of Object.entries(error.problem.errors)) {
-    const field = fields.find((name) => name.toLowerCase() === key.toLowerCase())
-    if (field && messages[0] && !result[field]) {
-      result[field] = messages[0]
-    }
+    const path = key
+      .replace(/\[(\d+)\]/g, '.$1')
+      .split('.')
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toLowerCase() + part.slice(1))
+      .join('.')
+    if (path && messages[0] && !result[path]) result[path] = messages[0]
   }
   return result
 }

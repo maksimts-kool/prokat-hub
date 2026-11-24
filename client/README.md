@@ -57,18 +57,21 @@ Every request goes through `apiFetch` in `src/api/http-client.ts`. It prefixes `
 
 `src/auth/` holds the signed-in user. `AuthProvider` (mounted at the top of the router) keeps the JWT from login or register in localStorage, loads the user with `GET /api/auth/me` after a reload and drops an expired token. Use `useAuth()` for `user`, `status`, `hasRole(...)`, `signIn` and `signOut`.
 
-| Route                 | Who                                  |
-| --------------------- | ------------------------------------ |
-| `/`, `/catalogue`     | Everyone                             |
-| `/login`, `/register` | Guests (signed-in users are sent on) |
-| `/dashboard`          | Customer, Staff, Admin               |
-| `/dashboard/rentals`  | Customer                             |
-| `/dashboard/desk`     | Staff, Admin                         |
-| `/dashboard/reports`  | Admin                                |
+| Route                  | Who                                  |
+| ---------------------- | ------------------------------------ |
+| `/`, `/catalogue`      | Everyone                             |
+| `/login`, `/register`  | Guests (signed-in users are sent on) |
+| `/dashboard`           | Customer, Staff, Admin               |
+| `/dashboard/rentals`   | Customer                             |
+| `/dashboard/desk`      | Staff, Admin                         |
+| `/dashboard/catalogue` | Admin                                |
+| `/dashboard/reports`   | Admin                                |
 
 The header links only to the public pages; signed-in pages live in the dashboard (`src/pages/dashboard/`), opened from **Dashboard** in the account menu. Its sidebar shows each role's sections and the band at the top names the section. The old `/rentals`, `/desk` and `/reports` addresses redirect into it.
 
 The rental desk (`src/pages/dashboard/desk/`) lists rentals in a TanStack Table, shown as cards on phones: today's pickups, rentals out now, overdue rentals (`GET /api/rentals/overdue`) and all rentals filtered by status and dates. Its tab, filters and page are in the URL. Issue, Receive and Mark late each open a confirmation that says what the customer is charged; Issue and Receive take an optional note for the status history. Which buttons a rental gets follows the API's rules in `desk-actions.ts`.
+
+Catalogue management (`src/pages/dashboard/catalogue/`) has two tabs. **Items** is a TanStack Table of the catalogue with search, a category filter and pages in the URL; Add and Edit open one dialog with every field of the item, its prices and its specifications (editing loads the full item first), and Retire takes the item out of the catalogue while its rentals keep it. **Categories** lists each category with its item count; a category that still has items can't be deleted. The Zod schemas in `catalogue-schemas.ts` repeat the server's validators, and server errors (400 field rules, or a 409 for a category name or slug in use) are shown next to their fields.
 
 The roles per page live in `pageRoles` (`src/auth/roles.ts`): the router guards routes with `RequireAuth` and the dashboard sidebar shows only the sections the user may open. A guest opening a protected page goes to `/login` and returns afterwards; a signed-in user without the role sees a "No access" page. When a request sent with the token gets 401, the session ends and the user is sent to `/login`.
 

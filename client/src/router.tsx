@@ -5,6 +5,7 @@ import { GuestOnly, RequireAuth } from '@/auth/route-guards'
 import { AppLayout } from '@/components/layout/app-layout'
 import { CataloguePage } from '@/pages/catalogue-page'
 import { DashboardLayout } from '@/pages/dashboard/dashboard-layout'
+import { CatalogueAdminPage } from '@/pages/dashboard/catalogue/catalogue-admin-page'
 import type { DashboardHandle } from '@/pages/dashboard/dashboard-nav'
 import { DeskPage } from '@/pages/dashboard/desk/desk-page'
 import { MyRentalsPage } from '@/pages/dashboard/my-rentals-page'
@@ -69,6 +70,11 @@ export const router = createBrowserRouter([
                     element: <RequireAuth roles={pageRoles.desk} />,
                     handle: { section: 'desk' } satisfies DashboardHandle,
                     children: [{ path: 'desk', element: <DeskPage /> }],
+                  },
+                  {
+                    element: <RequireAuth roles={pageRoles.catalogue} />,
+                    handle: { section: 'catalogue' } satisfies DashboardHandle,
+                    children: [{ path: 'catalogue', element: <CatalogueAdminPage /> }],
                   },
                   {
                     element: <RequireAuth roles={pageRoles.reports} />,

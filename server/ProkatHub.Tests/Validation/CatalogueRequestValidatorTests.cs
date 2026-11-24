@@ -36,6 +36,15 @@ public class CatalogueRequestValidatorTests
         result.ShouldHaveValidationErrorFor("Specifications[1].Value");
     }
 
+    [Fact]
+    public void Prices_with_more_than_two_decimals_are_rejected()
+    {
+        var result = new ItemRequestValidator().TestValidate(ValidItem() with { DailyPrice = 25.005m, Deposit = 300.10m });
+
+        result.ShouldHaveValidationErrorFor(x => x.DailyPrice);
+        result.ShouldNotHaveValidationErrorFor(x => x.Deposit);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

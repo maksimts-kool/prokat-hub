@@ -31,6 +31,10 @@ public sealed class GlobalExceptionHandler(
                 : new ProblemDetails { Detail = appException.Message };
             problem.Status = appException.StatusCode;
             problem.Title = appException.Title;
+            if (appException is ConflictException { Field: { } field })
+            {
+                problem.Extensions["errors"] = new Dictionary<string, string[]> { [field] = [appException.Message] };
+            }
         }
         else
         {

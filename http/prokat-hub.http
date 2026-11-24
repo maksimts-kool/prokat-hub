@@ -324,7 +324,7 @@ Content-Type: application/json
   "description": "FDM and resin printers."
 }
 
-### Create a category with a name in use → 409
+### Create a category with a name in use → 409, with the message under errors.Name
 POST {{baseUrl}}/api/categories
 Authorization: Bearer {{adminLogin.response.body.accessToken}}
 Content-Type: application/json

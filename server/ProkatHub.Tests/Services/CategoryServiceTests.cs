@@ -59,8 +59,18 @@ public class CategoryServiceTests
     {
         _repository.FindDuplicatesAsync("Cameras", "cameras", null, Arg.Any<CancellationToken>()).Returns((true, true));
 
-        await Assert.ThrowsAsync<ConflictException>(() => _service.CreateAsync(new CategoryRequest("Cameras", null, null)));
+        var error = await Assert.ThrowsAsync<ConflictException>(() => _service.CreateAsync(new CategoryRequest("Cameras", null, null)));
+        Assert.Equal(nameof(CategoryRequest.Name), error.Field);
         _repository.DidNotReceive().Add(Arg.Any<Category>());
+    }
+
+    [Fact]
+    public async Task Create_with_a_slug_in_use_is_a_conflict_about_the_slug()
+    {
+        _repository.FindDuplicatesAsync("Photo", "cameras", null, Arg.Any<CancellationToken>()).Returns((false, true));
+
+        var error = await Assert.ThrowsAsync<ConflictException>(() => _service.CreateAsync(new CategoryRequest("Photo", "cameras", null)));
+        Assert.Equal(nameof(CategoryRequest.Slug), error.Field);
     }
 
     [Fact]

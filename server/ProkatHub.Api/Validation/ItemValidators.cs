@@ -64,9 +64,10 @@ public sealed class ItemRequestValidator : AbstractValidator<ItemRequest>
             .WithMessage("ImageUrl must be an absolute http or https URL.")
             .When(x => !string.IsNullOrWhiteSpace(x.ImageUrl));
 
-        RuleFor(x => x.DailyPrice).NotNull().InclusiveBetween(0.01m, 100_000m);
-        RuleFor(x => x.Deposit).NotNull().InclusiveBetween(0m, 1_000_000m);
-        RuleFor(x => x.LateFeePerDay).NotNull().InclusiveBetween(0m, 100_000m);
+        // Money is stored with two decimals (numeric(10, 2)), so more would be rounded away.
+        RuleFor(x => x.DailyPrice).NotNull().InclusiveBetween(0.01m, 100_000m).PrecisionScale(10, 2, true);
+        RuleFor(x => x.Deposit).NotNull().InclusiveBetween(0m, 1_000_000m).PrecisionScale(10, 2, true);
+        RuleFor(x => x.LateFeePerDay).NotNull().InclusiveBetween(0m, 100_000m).PrecisionScale(10, 2, true);
 
         RuleFor(x => x.Specifications)
             .Must(s => s!.Count <= MaxSpecifications)
