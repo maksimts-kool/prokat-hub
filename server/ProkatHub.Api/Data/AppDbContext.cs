@@ -18,6 +18,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        // Full Unicode, compared case-insensitively: catalogue search (LIKE) and unique names ignore case.
+        builder.HasCharSet("utf8mb4").UseCollation("utf8mb4_unicode_ci");
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 

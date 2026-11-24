@@ -7,6 +7,7 @@ import type { AuthResponse } from '@/api/generated/model'
 import { isApiError, onUnauthorized } from '@/api/http-client'
 import { AuthContext, type AuthContextValue, type AuthStatus } from '@/auth/auth-context'
 import { authPath } from '@/auth/return-path'
+import { BASE_PATH } from '@/lib/config'
 import { hasAnyRole, type Role } from '@/auth/roles'
 import i18n from '@/i18n'
 import {
@@ -25,8 +26,12 @@ function readValidToken(): string | null {
   return token && !isTokenExpired(token) ? token : null
 }
 
+/** The current location inside the app, without the base path the router adds back itself. */
 function currentPath(): string {
-  return window.location.pathname + window.location.search + window.location.hash
+  const { pathname, search, hash } = window.location
+  const path =
+    BASE_PATH && pathname.startsWith(BASE_PATH) ? pathname.slice(BASE_PATH.length) || '/' : pathname
+  return path + search + hash
 }
 
 /**

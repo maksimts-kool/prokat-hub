@@ -63,7 +63,7 @@ public sealed class RentalRepository(AppDbContext db) : IRentalRepository
     public async Task<Rental?> GetForStatusChangeAsync(int id, CancellationToken cancellationToken = default)
     {
         var rental = await db.Rentals
-            .FromSql($"""SELECT * FROM "Rentals" WHERE "Id" = {id} FOR UPDATE""")
+            .FromSql($"SELECT * FROM `Rentals` WHERE `Id` = {id} FOR UPDATE")
             .FirstOrDefaultAsync(cancellationToken);
         if (rental is null)
         {

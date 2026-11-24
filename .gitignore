@@ -491,3 +491,7 @@ pnpm-debug.log*
 
 ## macOS
 .DS_Store
+
+# Zone.ee deploy: server settings and build output
+deploy/zone/zone.env
+deploy/zone/out/

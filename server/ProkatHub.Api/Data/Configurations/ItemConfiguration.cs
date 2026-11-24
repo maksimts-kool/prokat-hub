@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProkatHub.Api.Domain;
 
@@ -10,9 +12,9 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
     {
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint("CK_Items_DailyPrice", "\"DailyPrice\" > 0");
-            t.HasCheckConstraint("CK_Items_Deposit", "\"Deposit\" >= 0");
-            t.HasCheckConstraint("CK_Items_LateFeePerDay", "\"LateFeePerDay\" >= 0");
+            t.HasCheckConstraint("CK_Items_DailyPrice", "`DailyPrice` > 0");
+            t.HasCheckConstraint("CK_Items_Deposit", "`Deposit` >= 0");
+            t.HasCheckConstraint("CK_Items_LateFeePerDay", "`LateFeePerDay` >= 0");
         });
 
         builder.Property(i => i.Name).HasMaxLength(150);
@@ -20,8 +22,18 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
         builder.Property(i => i.Description).HasMaxLength(2000);
         builder.Property(i => i.ImageUrl).HasMaxLength(500);
 
-        // A jsonb column holding the list; the migration gives existing rows an empty list.
-        builder.OwnsMany(i => i.Specifications, spec => spec.ToJson());
+        // The list is stored as JSON text in one column. Pomelo doesn't support ToJson() owned collections, so a
+        // value converter serializes it; the comparer lets change tracking notice edits inside the list.
+        builder.Property(i => i.Specifications)
+            .HasConversion(
+                specs => JsonSerializer.Serialize(specs, SpecificationJson),
+                json => JsonSerializer.Deserialize<List<ItemSpecification>>(json, SpecificationJson) ?? new List<ItemSpecification>(),
+                new ValueComparer<List<ItemSpecification>>(
+                    (a, b) => JsonSerializer.Serialize(a, SpecificationJson) == JsonSerializer.Serialize(b, SpecificationJson),
+                    specs => JsonSerializer.Serialize(specs, SpecificationJson).GetHashCode(),
+                    specs => JsonSerializer.Deserialize<List<ItemSpecification>>(
+                        JsonSerializer.Serialize(specs, SpecificationJson), SpecificationJson)!))
+            .HasColumnType("json");
 
         builder.HasOne(i => i.Category)
             .WithMany(c => c.Items)
@@ -30,4 +42,6 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
 
         builder.HasIndex(i => i.Name);
     }
+
+    private static readonly JsonSerializerOptions SpecificationJson = new(JsonSerializerDefaults.Web);
 }

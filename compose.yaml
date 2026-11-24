@@ -2,18 +2,20 @@ name: prokat-hub
 
 services:
   db:
-    image: postgres:18-alpine
+    # MariaDB, like the Zone server the app is deployed to.
+    image: mariadb:11.4
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
-      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      MARIADB_DATABASE: ${DB_NAME:?Set DB_NAME in .env}
+      MARIADB_USER: ${DB_USER:?Set DB_USER in .env}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${DB_PORT:-3306}:3306"
     volumes:
-      - db-data:/var/lib/postgresql
+      - db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -28,7 +30,8 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Default: Server=db;Port=3306;Database=${DB_NAME};User=${DB_USER};Password=${DB_PASSWORD}
+      Database__ServerVersion: ${DB_SERVER_VERSION:-10.11}
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
       Cors__AllowedOrigins__0: ${CLIENT_ORIGIN:-http://localhost:5173}
       Seed__Accounts__Admin__Password: ${SEED_ADMIN_PASSWORD:-}
@@ -102,4 +105,6 @@ services:
           path: ./client/pnpm-lock.yaml
 
 volumes:
+  # A new name, so the old PostgreSQL data volume isn't mounted into MariaDB.
   db-data:
+    name: prokat-hub-mariadb-data

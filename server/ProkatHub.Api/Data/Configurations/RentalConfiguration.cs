@@ -8,7 +8,7 @@ public class RentalConfiguration : IEntityTypeConfiguration<Rental>
 {
     public void Configure(EntityTypeBuilder<Rental> builder)
     {
-        builder.ToTable(t => t.HasCheckConstraint("CK_Rentals_Dates", "\"EndDate\" >= \"StartDate\""));
+        builder.ToTable(t => t.HasCheckConstraint("CK_Rentals_Dates", "`EndDate` >= `StartDate`"));
 
         builder.Property(r => r.DiscountPercent).HasPrecision(5, 2);
 

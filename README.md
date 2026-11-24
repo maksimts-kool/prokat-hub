@@ -13,7 +13,7 @@ One responsive website (React) talks to an ASP.NET Core Web API. Everything runs
 | Folder | Contents |
 | --- | --- |
 | `server/` | .NET 10 solution `ProkatHub.slnx` |
-| `server/ProkatHub.Api/` | ASP.NET Core Web API: controllers, services, repositories, EF Core (PostgreSQL), Identity + JWT |
+| `server/ProkatHub.Api/` | ASP.NET Core Web API: controllers, services, repositories, EF Core (MariaDB via Pomelo), Identity + JWT |
 | `server/ProkatHub.Worker/` | Hourly Worker Service that calls the API as the Service account |
 | `server/ProkatHub.Tests/` | xUnit unit tests |
 | `client/` | React web client: Vite, TypeScript, Tailwind CSS, shadcn/ui ([client/README.md](client/README.md)) |
@@ -31,7 +31,7 @@ cp .env.example .env
 docker compose watch
 ```
 
-`docker compose watch` builds and starts PostgreSQL, the API, the overdue worker and the web client, then syncs code changes into the containers: `dotnet watch` reloads the API and Vite hot-reloads the client. Use `docker compose up -d` to run without hot reload.
+`docker compose watch` builds and starts MariaDB, the API, the overdue worker and the web client, then syncs code changes into the containers: `dotnet watch` reloads the API and Vite hot-reloads the client. Use `docker compose up -d` to run without hot reload.
 
 On startup in Development the API applies EF Core migrations and seeds the demo catalogue, discount tiers, one account per role and a few demo rentals.
 
@@ -103,7 +103,7 @@ The API also runs on the host with the .NET 10 SDK, using the Docker database:
 ```bash
 docker compose up -d db
 cd server/ProkatHub.Api
-dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=prokathub;Username=prokathub;Password=<POSTGRES_PASSWORD>"
+dotnet user-secrets set "ConnectionStrings:Default" "Server=localhost;Port=3306;Database=prokathub;User=prokathub;Password=<DB_PASSWORD>"
 dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)"
 dotnet user-secrets set "Seed:Accounts:Customer:Password" "Customer12345"
 dotnet run
@@ -116,6 +116,30 @@ cd server
 dotnet tool restore
 dotnet ef migrations add <Name> --project ProkatHub.Api --output-dir Data/Migrations
 ```
+
+## Deployment (Zone.ee)
+
+The live site runs on a Zone.ee virtual server, which has no Docker, at `/prokathub` of the account's website:
+
+- The **API** and the **worker** are self-contained `linux-x64` builds that PM2 keeps running.
+- The API also serves the production build of the **web client** from its `wwwroot`, so the site and the API share one origin.
+- The `PathBase` setting tells the API that requests arrive under `/prokathub`.
+- Apache forwards `/prokathub` to the API with an `.htaccess` proxy rule.
+- The **database** is the account's MariaDB from MyZone. The API applies migrations on startup.
+
+```bash
+cp deploy/zone/zone.env.example deploy/zone/zone.env   # once: server, paths, port, database name and user
+deploy/zone/deploy.sh                                 # build, upload, write the proxy rule and PM2 files, (re)start
+```
+
+The first run writes `~/prokathub/api.pm2.json` and `worker.pm2.json` on the server, with a generated JWT key and seed account passwords. These secrets stay on the server only. Then:
+
+```bash
+deploy/zone/set-db-password.sh   # asks for the MyZone database password and stores it on the server
+deploy/zone/deploy.sh            # starts both apps
+```
+
+Register both PM2 files in MyZone (PM2 rakendused), so Zone keeps the apps running after a server restart.
 
 ## Continuous integration
 
