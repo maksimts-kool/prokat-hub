@@ -8,6 +8,7 @@ export const en = {
     catalogue: 'Catalogue',
   },
   layout: {
+    skipToContent: 'Skip to main content',
     mainNav: 'Main',
     mobileNav: 'Mobile',
     footerNav: 'Footer',

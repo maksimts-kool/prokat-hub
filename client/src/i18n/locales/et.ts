@@ -7,6 +7,7 @@ export const et: Translations = {
     catalogue: 'Kataloog',
   },
   layout: {
+    skipToContent: 'Liigu põhisisu juurde',
     mainNav: 'Peamenüü',
     mobileNav: 'Mobiilimenüü',
     footerNav: 'Jaluse lingid',

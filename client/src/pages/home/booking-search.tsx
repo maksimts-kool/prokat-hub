@@ -52,6 +52,7 @@ export function BookingSearch() {
       </Segment>
       <Segment
         divider
+        iconOnWideScreens
         icon={<CalendarCheck className="size-5" aria-hidden />}
         label={t('catalogue.pickUp')}
       >
@@ -73,6 +74,7 @@ export function BookingSearch() {
       </Segment>
       <Segment
         divider
+        iconOnWideScreens
         icon={<CalendarCheck className="size-5" aria-hidden />}
         label={t('catalogue.return')}
       >
@@ -106,12 +108,15 @@ function Segment({
   icon,
   label,
   divider,
+  iconOnWideScreens,
   className,
   children,
 }: {
   icon: ReactNode
   label: string
   divider?: boolean
+  /** Drops the icon on phones, where the half-width date segments need the room for longer (Estonian) labels. */
+  iconOnWideScreens?: boolean
   className?: string
   children: (id: string) => ReactNode
 }) {
@@ -125,7 +130,9 @@ function Segment({
           : ''
       } ${className ?? ''}`}
     >
-      <span className="shrink-0 text-band-foreground">{icon}</span>
+      <span className={`shrink-0 text-band-foreground ${iconOnWideScreens ? 'max-sm:hidden' : ''}`}>
+        {icon}
+      </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-[15px] leading-5 font-semibold">{label}</span>
         {children(id)}
