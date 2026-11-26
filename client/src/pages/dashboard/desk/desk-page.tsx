@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router'
 import { apiErrorMessage } from '@/api/error-message'
 import { RentalStatus, type GetApiRentalsParams } from '@/api/generated/model'
 import { useGetApiRentals, useGetApiRentalsOverdue } from '@/api/generated/rentals/rentals'
-import { PageLoader } from '@/components/page-loader'
+import { LoadingRegion, TableSkeleton } from '@/components/skeletons'
 import { Pagination } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -190,7 +190,11 @@ export function DeskPage() {
   if (tab === 'all' && reversed) {
     content = null
   } else if (query.isPending) {
-    content = <PageLoader />
+    content = (
+      <LoadingRegion>
+        <TableSkeleton columns={6} />
+      </LoadingRegion>
+    )
   } else if (query.isError && !query.data) {
     content = (
       <LoadError message={apiErrorMessage(query.error)} onRetry={() => void query.refetch()} />

@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { apiErrorMessage, serverFieldErrors } from '@/api/error-message'
 import { usePostApiAuthRegister } from '@/api/generated/auth/auth'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { useAuth } from '@/auth/auth-context'
 import { AuthCard } from '@/components/auth-card'
 import { FormAlert } from '@/components/form-alert'
@@ -25,7 +26,7 @@ export function RegisterPage() {
   const { t } = useTranslation()
   const { signIn } = useAuth()
   const location = useLocation()
-  const registerAccount = usePostApiAuthRegister()
+  const registerAccount = usePostApiAuthRegister({ mutation: { meta: errorsShownInline } })
 
   // Same rules as RegisterRequestValidator and the Identity password options on the server.
   const schema = useMemo(() => {

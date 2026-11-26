@@ -8,6 +8,7 @@ import { apiErrorMessage, serverFieldErrors } from '@/api/error-message'
 import { usePostApiCategories, usePutApiCategoriesId } from '@/api/generated/categories/categories'
 import type { CategoryDto } from '@/api/generated/model'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { FormAlert } from '@/components/form-alert'
 import { FormField } from '@/components/form-field'
 import { Button } from '@/components/ui/button'
@@ -63,8 +64,8 @@ export function CategoryDialog({
 function CategoryForm({ category, onClose }: { category?: CategoryDto; onClose: () => void }) {
   const { t } = useTranslation()
   const refresh = useCatalogueRefresh()
-  const create = usePostApiCategories()
-  const update = usePutApiCategoriesId()
+  const create = usePostApiCategories({ mutation: { meta: errorsShownInline } })
+  const update = usePutApiCategoriesId({ mutation: { meta: errorsShownInline } })
   const mutation = category ? update : create
   const [formError, setFormError] = useState<string>()
 

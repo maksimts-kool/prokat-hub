@@ -631,8 +631,10 @@ export const et: Translations = {
   },
   notFound: {
     title: 'Lehte ei leitud',
-    description: 'Otsitud lehte ei ole olemas.',
+    description: 'Otsitud lehte ei ole olemas või see on teisaldatud.',
+    path: 'Aadressil {{path}} ei ole midagi.',
     backHome: 'Tagasi avalehele',
+    browse: 'Sirvi kataloogi',
   },
   error: {
     title: 'Midagi läks valesti',
@@ -651,5 +653,9 @@ export const et: Translations = {
     validation: 'Mõni väli on vigane. Kontrolli vormi ja proovi uuesti.',
     network: 'Serveriga ei saa ühendust. Proovi hiljem uuesti.',
     unknown: 'Midagi läks valesti. Proovi uuesti.',
+    notFound: 'Otsitut ei leitud. See võib olla eemaldatud.',
+    tooManyRequests: 'Liiga palju päringuid. Oota hetk ja proovi uuesti.',
+    server: 'Serveris tekkis viga. Proovi hetke pärast uuesti.',
+    refreshFailed: 'Andmeid ei õnnestunud värskendada. Näidatud info võib olla aegunud.',
   },
 }

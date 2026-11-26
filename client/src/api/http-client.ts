@@ -10,6 +10,41 @@ export interface ProblemDetails {
   instance?: string
   /** Field name → messages, on 400 validation errors. */
   errors?: Record<string, string[]>
+  /** ASP.NET Core adds the request's trace id to every problem. */
+  traceId?: string
+}
+
+const text = (value: unknown) => (typeof value === 'string' && value ? value : undefined)
+
+/**
+ * Reads a response body as {@link ProblemDetails}, keeping only fields of the expected type, so a
+ * proxy's HTML error page or an odd body never reaches the UI as a problem. Returns `undefined`
+ * when the body is not a JSON object.
+ */
+export function parseProblemDetails(body: unknown): ProblemDetails | undefined {
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) return undefined
+  const raw = body as Record<string, unknown>
+
+  let errors: Record<string, string[]> | undefined
+  if (typeof raw.errors === 'object' && raw.errors !== null && !Array.isArray(raw.errors)) {
+    errors = {}
+    for (const [field, messages] of Object.entries(raw.errors)) {
+      const list = (Array.isArray(messages) ? messages : [messages]).filter(
+        (message): message is string => typeof message === 'string' && message.length > 0,
+      )
+      if (list.length > 0) errors[field] = list
+    }
+  }
+
+  return {
+    type: text(raw.type),
+    title: text(raw.title),
+    status: typeof raw.status === 'number' ? raw.status : undefined,
+    detail: text(raw.detail),
+    instance: text(raw.instance),
+    errors,
+    traceId: text(raw.traceId),
+  }
 }
 
 /** A request that got a non-2xx response, or no response at all (`status` 0). */
@@ -49,7 +84,14 @@ async function readBody(response: Response): Promise<unknown> {
   }
 
   const contentType = response.headers.get('content-type') ?? ''
-  return contentType.includes('json') ? JSON.parse(text) : text
+  if (!contentType.includes('json')) return text
+  try {
+    return JSON.parse(text)
+  } catch (error) {
+    // An error body that says JSON but isn't (e.g. from a proxy) still becomes an ApiError.
+    if (response.ok) throw error
+    return text
+  }
 }
 
 /**
@@ -83,8 +125,11 @@ export async function apiFetch<T>(url: string, options: RequestInit = {}): Promi
 
   const body = await readBody(response)
   if (!response.ok) {
-    const problem = typeof body === 'object' && body !== null ? (body as ProblemDetails) : undefined
-    throw new ApiError(response.status, problem, `Request failed with status ${response.status}.`)
+    throw new ApiError(
+      response.status,
+      parseProblemDetails(body),
+      `Request failed with status ${response.status}.`,
+    )
   }
 
   return body as T

@@ -2,7 +2,7 @@ import { CircleCheck, PackageCheck, Undo2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { apiErrorMessage } from '@/api/error-message'
 import type { StaffRentalDto } from '@/api/generated/model'
-import { PageLoader } from '@/components/page-loader'
+import { LoadingRegion, PanelSkeleton } from '@/components/skeletons'
 import { useDateRange } from '@/components/rentals/use-date-range'
 import { useFormat } from '@/i18n/format'
 import { daysLate } from '@/lib/rentals'
@@ -56,7 +56,17 @@ export function StaffOverview() {
   const range = useDateRange()
   const { today, pickups, out, overdue, pickupRows, outRows, overdueRows } = useStaffToday()
 
-  if (pickups.isPending || out.isPending || overdue.isPending) return <PageLoader />
+  if (pickups.isPending || out.isPending || overdue.isPending) {
+    return (
+      <LoadingRegion className="flex flex-col gap-6">
+        <div className="grid gap-6 xl:grid-cols-2">
+          <PanelSkeleton />
+          <PanelSkeleton />
+        </div>
+        <PanelSkeleton rows={2} />
+      </LoadingRegion>
+    )
+  }
   const failed = [pickups, out, overdue].find((q) => q.isError && !q.data)
   if (failed) {
     return (

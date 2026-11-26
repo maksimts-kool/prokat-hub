@@ -6,7 +6,7 @@ import { apiErrorMessage } from '@/api/error-message'
 import { useGetApiCategories } from '@/api/generated/categories/categories'
 import type { CategoryDto } from '@/api/generated/model'
 import { categoryIcon } from '@/components/category-icon'
-import { PageLoader } from '@/components/page-loader'
+import { LoadingRegion, TableSkeleton } from '@/components/skeletons'
 import { Button } from '@/components/ui/button'
 import { RowActions } from '@/pages/dashboard/catalogue/row-actions'
 import { tableStyles } from '@/pages/dashboard/catalogue/table-styles'
@@ -88,7 +88,11 @@ export function CategoriesPanel({ onCreate, onEdit, onDelete }: CategoriesPanelP
 
   let content
   if (categories.isPending) {
-    content = <PageLoader />
+    content = (
+      <LoadingRegion>
+        <TableSkeleton columns={4} rows={5} />
+      </LoadingRegion>
+    )
   } else if (categories.isError) {
     content = (
       <LoadError

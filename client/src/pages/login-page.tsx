@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { apiErrorMessage } from '@/api/error-message'
 import { usePostApiAuthLogin } from '@/api/generated/auth/auth'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { useAuth } from '@/auth/auth-context'
 import { AuthCard } from '@/components/auth-card'
 import { FormAlert } from '@/components/form-alert'
@@ -22,7 +23,7 @@ export function LoginPage() {
   const { t } = useTranslation()
   const { signIn } = useAuth()
   const location = useLocation()
-  const login = usePostApiAuthLogin()
+  const login = usePostApiAuthLogin({ mutation: { meta: errorsShownInline } })
 
   // Same rules as LoginRequestValidator on the server.
   const schema = useMemo(

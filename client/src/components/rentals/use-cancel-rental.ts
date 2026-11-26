@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { apiErrorMessage } from '@/api/error-message'
+import { toastApiError } from '@/api/error-message'
 import {
   getGetApiItemsIdAvailabilityQueryKey,
   getGetApiItemsQueryKey,
@@ -12,6 +12,7 @@ import {
   usePatchApiRentalsIdStatus,
 } from '@/api/generated/rentals/rentals'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 
 /**
  * Cancels one of the customer's Booked rentals with `PATCH /api/rentals/{id}/status`. On success
@@ -20,7 +21,7 @@ import { isApiError } from '@/api/http-client'
 export function useCancelRental() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const mutation = usePatchApiRentalsIdStatus()
+  const mutation = usePatchApiRentalsIdStatus({ mutation: { meta: errorsShownInline } })
 
   function cancel(rental: RentalDto) {
     mutation.mutate(
@@ -31,11 +32,10 @@ export function useCancelRental() {
         },
         onError: (error) => {
           // 409: it was issued or cancelled meanwhile, so it can no longer be cancelled here.
-          toast.error(
-            isApiError(error) && error.status === 409
-              ? t('rentals.cancel.conflict')
-              : apiErrorMessage(error),
-          )
+          toastApiError(error, {
+            message:
+              isApiError(error) && error.status === 409 ? t('rentals.cancel.conflict') : undefined,
+          })
         },
         onSettled: () =>
           Promise.all([

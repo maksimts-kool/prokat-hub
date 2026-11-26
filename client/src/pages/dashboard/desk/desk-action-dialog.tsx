@@ -13,6 +13,7 @@ import {
   usePostApiRentalsIdMarkLate,
 } from '@/api/generated/rentals/rentals'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { FormAlert } from '@/components/form-alert'
 import { useDateRange } from '@/components/rentals/use-date-range'
 import {
@@ -87,8 +88,8 @@ function DialogBody({
   const { formatPrice, formatDate } = useFormat()
   const range = useDateRange()
   const refresh = useRefreshAfterChange()
-  const changeStatus = usePatchApiRentalsIdStatus()
-  const markLate = usePostApiRentalsIdMarkLate()
+  const changeStatus = usePatchApiRentalsIdStatus({ mutation: { meta: errorsShownInline } })
+  const markLate = usePostApiRentalsIdMarkLate({ mutation: { meta: errorsShownInline } })
   const [note, setNote] = useState('')
   const noteId = useId()
 

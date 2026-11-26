@@ -14,6 +14,7 @@ import {
   usePostApiRentals,
 } from '@/api/generated/rentals/rentals'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { useAuth } from '@/auth/auth-context'
 import { authPath } from '@/auth/return-path'
 import { pageRoles } from '@/auth/roles'
@@ -38,7 +39,7 @@ export function useBookItem(itemId: number, itemName: string) {
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
-  const create = usePostApiRentals()
+  const create = usePostApiRentals({ mutation: { meta: errorsShownInline } })
   const [validationError, setValidationError] = useState<string>()
 
   const access: BookingAccess =

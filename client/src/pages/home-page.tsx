@@ -22,11 +22,11 @@ export function HomePage() {
       .then((response) => {
         if (!ignore) setStatus(response.ok ? 'online' : 'offline')
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (ignore) return
         setStatus('offline')
         // The global i18n.t keeps `t` out of the deps, so a language switch doesn't re-run the check.
-        toast.error(i18n.t('home.apiUnreachable'), { description: String(error) })
+        toast.error(i18n.t('home.apiUnreachable'), { description: i18n.t('errors.network') })
       })
     return () => {
       ignore = true

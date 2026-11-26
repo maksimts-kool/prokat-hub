@@ -8,6 +8,7 @@ import { apiErrorMessage, serverErrorsByPath } from '@/api/error-message'
 import { useGetApiCategories } from '@/api/generated/categories/categories'
 import { useGetApiItemsId, usePostApiItems, usePutApiItemsId } from '@/api/generated/items/items'
 import type { ItemDetailsDto } from '@/api/generated/model'
+import { errorsShownInline } from '@/api/query-client'
 import { FormAlert } from '@/components/form-alert'
 import { FormField } from '@/components/form-field'
 import { PageLoader } from '@/components/page-loader'
@@ -121,8 +122,8 @@ function ItemForm({ item, onClose }: { item?: ItemDetailsDto; onClose: () => voi
   const id = useId()
   const refresh = useCatalogueRefresh()
   const categories = useGetApiCategories()
-  const create = usePostApiItems()
-  const update = usePutApiItemsId()
+  const create = usePostApiItems({ mutation: { meta: errorsShownInline } })
+  const update = usePutApiItemsId({ mutation: { meta: errorsShownInline } })
   const mutation = item ? update : create
   const [formError, setFormError] = useState<string>()
 

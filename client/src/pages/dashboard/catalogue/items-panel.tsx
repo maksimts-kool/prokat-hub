@@ -8,7 +8,7 @@ import { apiErrorMessage } from '@/api/error-message'
 import { useGetApiCategories } from '@/api/generated/categories/categories'
 import { useGetApiItems } from '@/api/generated/items/items'
 import type { ItemSummaryDto } from '@/api/generated/model'
-import { PageLoader } from '@/components/page-loader'
+import { LoadingRegion, TableSkeleton } from '@/components/skeletons'
 import { Pagination } from '@/components/pagination'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -120,7 +120,11 @@ export function ItemsPanel({ search, update, onCreate, onEdit, onRetire }: Items
 
   let content
   if (items.isPending) {
-    content = <PageLoader />
+    content = (
+      <LoadingRegion>
+        <TableSkeleton columns={5} />
+      </LoadingRegion>
+    )
   } else if (items.isError && !items.data) {
     content = (
       <LoadError message={apiErrorMessage(items.error)} onRetry={() => void items.refetch()} />

@@ -6,6 +6,7 @@ import { useDeleteApiCategoriesId } from '@/api/generated/categories/categories'
 import { useDeleteApiItemsId } from '@/api/generated/items/items'
 import type { CategoryDto, ItemSummaryDto } from '@/api/generated/model'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { FormAlert } from '@/components/form-alert'
 import {
   AlertDialog,
@@ -52,8 +53,8 @@ export function DeleteDialog({
 function Body({ target, onClose }: { target: DeleteTarget; onClose: () => void }) {
   const { t } = useTranslation()
   const refresh = useCatalogueRefresh()
-  const retireItem = useDeleteApiItemsId()
-  const deleteCategory = useDeleteApiCategoriesId()
+  const retireItem = useDeleteApiItemsId({ mutation: { meta: errorsShownInline } })
+  const deleteCategory = useDeleteApiCategoriesId({ mutation: { meta: errorsShownInline } })
   const mutation = target.kind === 'item' ? retireItem : deleteCategory
   const name = target.kind === 'item' ? target.item.name : target.category.name
   // A category with items in the catalogue can't go; say so rather than offer a button that fails.

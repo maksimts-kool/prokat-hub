@@ -6,7 +6,8 @@ import { useSearchParams } from 'react-router'
 import { apiErrorMessage } from '@/api/error-message'
 import type { PopularItemDto } from '@/api/generated/model'
 import { useGetApiReportsPopularItems } from '@/api/generated/reports/reports'
-import { PageLoader } from '@/components/page-loader'
+import { LoadingRegion, PanelSkeleton } from '@/components/skeletons'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -156,6 +157,36 @@ function Filters({ params }: { params: ReturnType<typeof useReportParams> }) {
   )
 }
 
+/** The report's shape while it loads: three stat tiles, the chart and the table. */
+function ReportSkeleton() {
+  return (
+    <LoadingRegion className="flex flex-col gap-5">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[0, 1, 2].map((tile) => (
+          <div key={tile} className="flex flex-col gap-2 rounded-xl border bg-card p-5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl border bg-card p-5 sm:p-6">
+        <Skeleton className="mb-5 h-6 w-48" />
+        <Skeleton className="mb-5 h-11 w-56 rounded-full" />
+        <div className="flex flex-col gap-3">
+          {['w-full', 'w-5/6', 'w-2/3', 'w-1/2', 'w-1/3'].map((width) => (
+            <div key={width} className="flex items-center gap-3">
+              <Skeleton className="h-3 w-28 shrink-0" />
+              <Skeleton className={`h-6 rounded-md ${width}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <PanelSkeleton rows={4} />
+    </LoadingRegion>
+  )
+}
+
 function StatTile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="rounded-xl border bg-card p-5">
@@ -245,7 +276,7 @@ export function ReportsPage() {
   if (!valid) {
     content = null
   } else if (report.isPending) {
-    content = <PageLoader />
+    content = <ReportSkeleton />
   } else if (report.isError && !report.data) {
     content = (
       <LoadError message={apiErrorMessage(report.error)} onRetry={() => void report.refetch()} />

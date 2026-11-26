@@ -634,8 +634,10 @@ export const en = {
   },
   notFound: {
     title: 'Page not found',
-    description: 'The page you are looking for does not exist.',
+    description: 'The page you are looking for does not exist or has moved.',
+    path: 'Nothing lives at {{path}}.',
     backHome: 'Back to home',
+    browse: 'Browse the catalogue',
   },
   error: {
     title: 'Something went wrong',
@@ -655,6 +657,10 @@ export const en = {
     validation: 'Some fields are not valid. Check the form and try again.',
     network: 'Cannot reach the server. Try again later.',
     unknown: 'Something went wrong. Try again.',
+    notFound: 'We could not find what you asked for. It may have been removed.',
+    tooManyRequests: 'Too many requests. Wait a moment and try again.',
+    server: 'The server ran into a problem. Try again in a moment.',
+    refreshFailed: 'Could not refresh the data. What you see may be out of date.',
   },
 }
 
