@@ -25,15 +25,94 @@ export const en = {
     label: 'Language',
   },
   home: {
-    title: 'Rent cameras, drones, laptops and more',
-    lead: 'Pick your dates, see the price with longer-rental discounts and book in a minute.',
+    eyebrow_one: '{{count}} item · from {{price}} / day',
+    eyebrow_other: '{{count}} items · from {{price}} / day',
+    title: 'Rent the latest electronics,',
+    titleAccent: 'hassle-free',
+    lead: 'Cameras, drones, laptops and more. Pick your dates, see the full price with discounts and book in a minute.',
     browse: 'Browse the catalogue',
-    apiStatus: {
-      checking: 'Checking the API at',
-      online: 'API online at',
-      offline: 'API offline at',
+    heroTag: 'for 7+ days',
+    search: {
+      label: 'Find available items',
+      what: 'What do you need?',
+      whatPlaceholder: 'Camera, drone, laptop…',
+      submit: 'Show available items',
     },
-    apiUnreachable: 'Cannot reach the API',
+    trust: {
+      live: 'Live availability',
+      noDouble: 'No double bookings',
+      cancel: 'Free cancellation until pickup',
+      deposit: 'Deposit refunded on return',
+    },
+    nextPickup: {
+      label: 'Your next pickup',
+      text: '{{item}}, {{from}} – {{to}}',
+      open: 'Open My rentals',
+    },
+    categories: {
+      title: 'What do you want to rent?',
+      sub: 'The categories people rent most.',
+      all: 'All categories',
+      items_one: '{{count}} item',
+      items_other: '{{count}} items',
+      from: 'from {{price}} / day',
+    },
+    popular: {
+      title: 'Popular this month',
+      sub: 'The most rented items over the last 30 days.',
+      all: 'See all popular items',
+    },
+    steps: {
+      title: 'How renting works',
+      sub: 'From search to return in four steps.',
+      search: {
+        title: 'Search with your dates',
+        text: 'Items that are taken on any of your days are marked, so you only book what is free.',
+      },
+      book: {
+        title: 'Book in a minute',
+        text: 'See the full price before you book. Cancel any time until pickup.',
+      },
+      pickup: {
+        title: 'Pick up at the desk',
+        text: 'Staff hand the item over and take the refundable deposit.',
+      },
+      return: {
+        title: 'Return it on time',
+        text: 'Bring it back by the end date and get your deposit back.',
+      },
+    },
+    discounts: {
+      title: 'Rent longer, pay less',
+      text: 'The discount is applied to the whole rental as soon as it reaches the length. Your quote always shows it before you book.',
+      cta: 'Find gear for a week',
+      days_one: '{{count}}+ day',
+      days_other: '{{count}}+ days',
+      example_one: '{{item}} for {{count}} day',
+      example_other: '{{item}} for {{count}} days',
+      was: 'Was',
+      now: 'now',
+    },
+    faq: {
+      title: 'Good to know',
+      sub: 'Deposits, cancelling, late returns and discounts in plain words.',
+      depositQ: 'When do I pay the deposit?',
+      depositA:
+        'At pickup. It is refunded when the item comes back, and it is never part of the rental price. Each item page shows its deposit.',
+      cancelQ: 'Can I cancel a booking?',
+      cancelA:
+        'Yes, any time before you pick the item up. Open My rentals and choose Cancel booking.',
+      lateQ: 'What if I return an item late?',
+      lateA:
+        'Every late day costs 1.5 × the daily price{{example}}. Fees are added automatically each day until the item is back.',
+      lateExample: ', for example {{price}} a day for the {{item}}',
+      discountQ: 'How do the discounts work?',
+      discountA:
+        'Rent for 3 days or more and you get 10% off, 7 days 20%, 14 days 30%. The discount covers the whole rental and is already in your quote.',
+      doubleQ: 'Can someone else book the same item for my dates?',
+      doubleA:
+        'No. Once you book, those days are taken, and every calendar on the site updates straight away.',
+    },
   },
   catalogue: {
     title: 'Catalogue',

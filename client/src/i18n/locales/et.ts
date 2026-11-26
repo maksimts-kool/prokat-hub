@@ -24,15 +24,93 @@ export const et: Translations = {
     label: 'Keel',
   },
   home: {
-    title: 'Laenuta kaameraid, droone, sülearvuteid ja muud',
-    lead: 'Vali kuupäevad, vaata hinda koos pikema laenutuse soodustusega ja broneeri minutiga.',
+    eyebrow_one: '{{count}} toode · alates {{price}} päevas',
+    eyebrow_other: '{{count}} toodet · alates {{price}} päevas',
+    title: 'Laenuta uusimat elektroonikat,',
+    titleAccent: 'muretult',
+    lead: 'Kaamerad, droonid, sülearvutid ja muu. Vali kuupäevad, vaata täishinda koos soodustustega ja broneeri minutiga.',
     browse: 'Sirvi kataloogi',
-    apiStatus: {
-      checking: 'Kontrollin API-t aadressil',
-      online: 'API töötab aadressil',
-      offline: 'API ei vasta aadressil',
+    heroTag: '7+ päeva',
+    search: {
+      label: 'Leia vabad tooted',
+      what: 'Mida sul vaja on?',
+      whatPlaceholder: 'Kaamera, droon, sülearvuti…',
+      submit: 'Näita vabu tooteid',
     },
-    apiUnreachable: 'API-ga ei saa ühendust',
+    trust: {
+      live: 'Saadavus reaalajas',
+      noDouble: 'Topeltbroneeringuid ei ole',
+      cancel: 'Tasuta tühistamine kuni kättesaamiseni',
+      deposit: 'Tagatisraha tagastatakse',
+    },
+    nextPickup: {
+      label: 'Sinu järgmine kättesaamine',
+      text: '{{item}}, {{from}} – {{to}}',
+      open: 'Ava Minu laenutused',
+    },
+    categories: {
+      title: 'Mida soovid laenutada?',
+      sub: 'Kategooriad, mida laenutatakse kõige rohkem.',
+      all: 'Kõik kategooriad',
+      items_one: '{{count}} toode',
+      items_other: '{{count}} toodet',
+      from: 'alates {{price}} päevas',
+    },
+    popular: {
+      title: 'Selle kuu populaarsed',
+      sub: 'Viimase 30 päeva enim laenutatud tooted.',
+      all: 'Kõik populaarsed tooted',
+    },
+    steps: {
+      title: 'Kuidas laenutamine käib',
+      sub: 'Otsingust tagastamiseni neljas sammus.',
+      search: {
+        title: 'Otsi oma kuupäevadega',
+        text: 'Tooted, mis on mõnel sinu päeval võetud, on märgitud, nii broneerid ainult vaba.',
+      },
+      book: {
+        title: 'Broneeri minutiga',
+        text: 'Näed täishinda enne broneerimist. Tühista igal ajal kuni kättesaamiseni.',
+      },
+      pickup: {
+        title: 'Võta lauast kätte',
+        text: 'Töötaja annab toote üle ja võtab tagastatava tagatisraha.',
+      },
+      return: {
+        title: 'Tagasta õigel ajal',
+        text: 'Too toode lõppkuupäevaks tagasi ja saad tagatisraha tagasi.',
+      },
+    },
+    discounts: {
+      title: 'Laenuta kauem, maksa vähem',
+      text: 'Soodustus kehtib kogu laenutusele niipea, kui see pikkuse täis saab. Hinnapakkumine näitab seda alati enne broneerimist.',
+      cta: 'Leia varustus nädalaks',
+      days_one: '{{count}}+ päev',
+      days_other: '{{count}}+ päeva',
+      example_one: '{{item}} {{count}} päevaks',
+      example_other: '{{item}} {{count}} päevaks',
+      was: 'Oli',
+      now: 'nüüd',
+    },
+    faq: {
+      title: 'Hea teada',
+      sub: 'Tagatisraha, tühistamine, hilinemine ja soodustused lihtsalt.',
+      depositQ: 'Millal ma tagatisraha maksan?',
+      depositA:
+        'Kättesaamisel. See tagastatakse, kui toode tuleb tagasi, ega ole kunagi osa laenutushinnast. Iga toote leht näitab selle tagatisraha.',
+      cancelQ: 'Kas ma saan broneeringu tühistada?',
+      cancelA:
+        'Jah, igal ajal enne toote kättesaamist. Ava Minu laenutused ja vali Tühista broneering.',
+      lateQ: 'Mis saab, kui tagastan toote hiljem?',
+      lateA:
+        'Iga hilinetud päev maksab 1,5 × päevahinna{{example}}. Tasud lisatakse automaatselt iga päev, kuni toode on tagasi.',
+      lateExample: ', näiteks {{price}} päevas toote {{item}} eest',
+      discountQ: 'Kuidas soodustused toimivad?',
+      discountA:
+        'Laenuta vähemalt 3 päeva ja saad 10% soodsamalt, 7 päeva 20%, 14 päeva 30%. Soodustus kehtib kogu laenutusele ja on hinnapakkumises juba sees.',
+      doubleQ: 'Kas keegi teine saab sama toote minu kuupäevadeks broneerida?',
+      doubleA: 'Ei. Kui broneerid, on need päevad võetud ja kõik saidi kalendrid uuenevad kohe.',
+    },
   },
   catalogue: {
     title: 'Kataloog',

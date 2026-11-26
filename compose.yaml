@@ -25,6 +25,7 @@ services:
       context: ./server
       dockerfile: ProkatHub.Api/Dockerfile
       target: ${API_BUILD_TARGET:-dev}
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -32,14 +33,34 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ConnectionStrings__Default: Server=db;Port=3306;Database=${DB_NAME};User=${DB_USER};Password=${DB_PASSWORD}
       Database__ServerVersion: ${DB_SERVER_VERSION:-10.11}
+      # Apply migrations and seed the demo catalogue on start in every environment, so a fresh
+      # database works without a manual step. Both are idempotent.
+      Database__MigrateOnStartup: ${DB_MIGRATE_ON_STARTUP:-true}
+      Seed__DemoData: ${SEED_DEMO_DATA:-true}
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
       Cors__AllowedOrigins__0: ${CLIENT_ORIGIN:-http://localhost:5173}
       Seed__Accounts__Admin__Password: ${SEED_ADMIN_PASSWORD:-}
       Seed__Accounts__Staff__Password: ${SEED_STAFF_PASSWORD:-}
       Seed__Accounts__Customer__Password: ${SEED_CUSTOMER_PASSWORD:-}
-      Seed__Accounts__Service__Password: ${SEED_SERVICE_PASSWORD:-}
+      Seed__Accounts__Service__Password: ${SEED_SERVICE_PASSWORD:?Set SEED_SERVICE_PASSWORD in .env}
     ports:
       - "${API_PORT:-8080}:8080"
+    healthcheck:
+      # GET /health checks the database too. Plain bash, because the runtime image has no curl.
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080 &&
+          printf 'GET /health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 &&
+          head -n 1 <&3 | grep -q ' 200 '
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      # dotnet watch compiles before it listens; migrations run on the first start.
+      start_period: 3m
+      start_interval: 5s
     develop:
       watch:
         # Source changes are copied into the container and picked up by `dotnet watch`.
@@ -58,14 +79,16 @@ services:
     build:
       context: ./server
       dockerfile: ProkatHub.Worker/Dockerfile
+    restart: unless-stopped
     depends_on:
-      # Calls that fail while the API is still starting are retried by the worker's resilience pipeline.
-      - api
+      # Starts once the API answers, so the first overdue run can log in straight away.
+      api:
+        condition: service_healthy
     environment:
       DOTNET_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       Api__BaseUrl: http://api:8080
       Api__Email: ${SERVICE_EMAIL:-service@prokathub.test}
-      Api__Password: ${SEED_SERVICE_PASSWORD:-}
+      Api__Password: ${SEED_SERVICE_PASSWORD:?Set SEED_SERVICE_PASSWORD in .env}
       Overdue__Interval: ${WORKER_INTERVAL:-01:00:00}
     develop:
       watch:
@@ -79,9 +102,15 @@ services:
   web:
     build:
       context: ./client
-      target: dev
+      # dev = Vite dev server (use `docker compose watch`), final = the built client on nginx
+      target: ${WEB_BUILD_TARGET:-dev}
+      args:
+        # The final image bakes the API address into the bundle at build time.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+    restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
       # The browser calls the API directly, so this is the API address as seen from the host.
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}

@@ -28,12 +28,28 @@ Requirements: Docker Desktop (Compose v2.22+).
 
 ```bash
 cp .env.example .env
-docker compose watch
+docker compose up --build
 ```
 
-`docker compose watch` builds and starts MariaDB, the API, the overdue worker and the web client, then syncs code changes into the containers: `dotnet watch` reloads the API and Vite hot-reloads the client. Use `docker compose up -d` to run without hot reload.
+This builds and starts MariaDB, the API, the overdue worker and the web client. The API waits for a healthy database; the worker and the web client wait until the API's `/health` answers. Every service restarts on failure.
 
-On startup in Development the API applies EF Core migrations and seeds the demo catalogue, discount tiers, one account per role and a few demo rentals.
+For development, run `docker compose watch` instead: it also syncs code changes into the containers, so `dotnet watch` reloads the API and Vite hot-reloads the client.
+
+On every start the API applies EF Core migrations and seeds the demo catalogue, discount tiers, one account per role and a few demo rentals (`DB_MIGRATE_ON_STARTUP` and `SEED_DEMO_DATA` in `.env`; both are safe to repeat).
+
+Secrets come only from `.env`: the database passwords, `JWT_SIGNING_KEY` and the seeded account passwords. Compose refuses to start without the database passwords, the JWT key or `SEED_SERVICE_PASSWORD`, which the worker logs in with.
+
+### Production images
+
+The dev targets run `dotnet watch` and the Vite dev server. To run the production images instead, set these in `.env` and start with `docker compose up --build`:
+
+```bash
+API_BUILD_TARGET=final
+WEB_BUILD_TARGET=final
+ASPNETCORE_ENVIRONMENT=Production
+```
+
+The API then runs on the slim ASP.NET runtime, and the web client is built once and served by nginx on the same port (5173), with every unknown path falling back to `index.html`. `VITE_API_URL` is baked into the client at build time, so rebuild the web image after changing it. Swagger is off in Production.
 
 | URL | What |
 | --- | --- |
@@ -163,4 +179,4 @@ Edits survive later deploys. `deploy.sh` only rewrites the address, path, databa
 | --- | --- |
 | Server | `dotnet build` and `dotnet test` for `server/ProkatHub.slnx` (Release) |
 | Client | `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm format:check`, `pnpm build`, and `pnpm test` once the client has a test script |
-| Docker images | `docker compose build` for the dev images, plus the production API image (`API_BUILD_TARGET=final`) |
+| Docker images | `docker compose build` for the dev images, plus the production API and web images (`API_BUILD_TARGET=final`, `WEB_BUILD_TARGET=final`) |
