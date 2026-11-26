@@ -57,12 +57,15 @@ public sealed class ItemRequestValidator : AbstractValidator<ItemRequest>
         RuleFor(x => x.Brand).NotEmpty().MaximumLength(80);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(2000);
 
-        // A blank image URL is allowed and stored as "no image".
-        RuleFor(x => x.ImageUrl)
+        RuleFor(x => x.ImageUrls)
+            .Must(urls => urls!.Count <= MaxImages)
+            .WithMessage($"An item can have at most {MaxImages} images.")
+            .When(x => x.ImageUrls is not null);
+        RuleForEach(x => x.ImageUrls)
+            .NotEmpty()
             .MaximumLength(500)
             .Must(BeHttpUrl)
-            .WithMessage("ImageUrl must be an absolute http or https URL.")
-            .When(x => !string.IsNullOrWhiteSpace(x.ImageUrl));
+            .WithMessage("Each image URL must be an absolute http or https URL.");
 
         // Money is stored with two decimals (numeric(10, 2)), so more would be rounded away.
         RuleFor(x => x.DailyPrice).NotNull().InclusiveBetween(0.01m, 100_000m).PrecisionScale(10, 2, true);
@@ -84,6 +87,7 @@ public sealed class ItemRequestValidator : AbstractValidator<ItemRequest>
     }
 
     public const int MaxSpecifications = 20;
+    public const int MaxImages = 8;
 
     /// <summary>camelCase, 1–40 characters: the key the client translates into a label.</summary>
     public const string SpecificationKeyPattern = "^[a-z][a-zA-Z0-9]{0,39}$";

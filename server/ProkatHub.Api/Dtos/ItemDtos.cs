@@ -1,6 +1,7 @@
 namespace ProkatHub.Api.Dtos;
 
 /// <summary>One item in the catalogue list.</summary>
+/// <param name="ImageUrls">Photo URLs in display order; the first one is the cover. Empty when the item has none.</param>
 /// <param name="IsAvailable">
 /// Whether the item is free on every day of the <c>from</c>–<c>to</c> range of the request;
 /// null when the request has no dates.
@@ -13,9 +14,10 @@ public sealed record ItemSummaryDto(
     string CategoryName,
     decimal DailyPrice,
     decimal Deposit,
-    string? ImageUrl,
+    IReadOnlyList<string> ImageUrls,
     bool? IsAvailable);
 
+/// <param name="ImageUrls">Photo URLs in display order; the first one is the cover. Empty when the item has none.</param>
 public sealed record ItemDetailsDto(
     int Id,
     string Name,
@@ -26,7 +28,7 @@ public sealed record ItemDetailsDto(
     decimal DailyPrice,
     decimal Deposit,
     decimal LateFeePerDay,
-    string? ImageUrl,
+    IReadOnlyList<string> ImageUrls,
     IReadOnlyList<ItemSpecificationDto> Specifications);
 
 /// <summary>
@@ -92,12 +94,13 @@ public sealed record ItemListQuery
 
 /// <summary>Body of <c>POST /api/items</c> and <c>PUT /api/items/{id}</c>.</summary>
 /// <remarks>Rules: <see cref="Validation.ItemRequestValidator"/>.</remarks>
+/// <param name="ImageUrls">Photo URLs in display order, the cover first; null or empty for no photos.</param>
 public sealed record ItemRequest(
     int? CategoryId,
     string Name,
     string Brand,
     string Description,
-    string? ImageUrl,
+    IReadOnlyList<string>? ImageUrls,
     decimal? DailyPrice,
     decimal? Deposit,
     decimal? LateFeePerDay,

@@ -34,7 +34,7 @@ export function LanguageSwitcher({ variant = 'compact', className }: LanguageSwi
               variant === 'full' && 'flex-1 text-sm',
               isActive
                 ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
-                : 'text-foreground/70 hover:text-primary',
+                : 'text-foreground/70 hover:text-primary in-[.on-band]:hover:text-band-accent',
             )}
           >
             {variant === 'full' ? language.name : language.short}

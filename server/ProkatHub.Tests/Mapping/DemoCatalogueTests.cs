@@ -20,6 +20,19 @@ public class DemoCatalogueTests
     }
 
     [Fact]
+    public void Every_demo_item_has_several_distinct_valid_photos()
+    {
+        var items = DemoCatalogue.Categories(DateTimeOffset.UnixEpoch).SelectMany(c => c.Items).ToList();
+
+        Assert.All(items, item =>
+        {
+            Assert.InRange(item.ImageUrls.Count, 2, ItemRequestValidator.MaxImages);
+            Assert.Equal(item.ImageUrls.Count, item.ImageUrls.Distinct().Count());
+            Assert.All(item.ImageUrls, url => Assert.True(Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == "https"));
+        });
+    }
+
+    [Fact]
     public void Item_outside_the_demo_catalogue_gets_no_specifications()
     {
         Assert.Empty(DemoCatalogue.SpecificationsFor("Not a demo item"));

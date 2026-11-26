@@ -36,7 +36,7 @@ public class ItemServiceTests
     };
 
     private static ItemRequest Request(int categoryId = 1) => new(
-        categoryId, "  Sony ZV-E10 II ", "Sony", "Vlogging camera", ImageUrl: " ", 20m, 300m, 30m);
+        categoryId, "  Sony ZV-E10 II ", "Sony", "Vlogging camera", ImageUrls: [" https://example.test/zv-e10.png "], 20m, 300m, 30m);
 
     [Fact]
     public async Task Page_passes_the_query_to_the_repository_and_maps_the_result()
@@ -110,7 +110,7 @@ public class ItemServiceTests
         var result = await _service.CreateAsync(Request());
 
         _repository.Received(1).Add(Arg.Is<Item>(i =>
-            i.Name == "Sony ZV-E10 II" && i.CategoryId == 1 && i.ImageUrl == null && i.CreatedAt == Now && i.IsActive));
+            i.Name == "Sony ZV-E10 II" && i.CategoryId == 1 && i.ImageUrls.SequenceEqual(new[] { "https://example.test/zv-e10.png" }) && i.CreatedAt == Now && i.IsActive));
         await _repository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
         Assert.Equal("Cameras", result.CategoryName);
         Assert.Equal(20m, result.DailyPrice);

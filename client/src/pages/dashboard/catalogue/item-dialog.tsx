@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Euro, Link2, Loader2, Plus, Trash2 } from 'lucide-react'
+import { Euro, ImagePlus, Loader2, Plus, Star, Trash2 } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import { type Path, useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -28,12 +28,14 @@ import {
   type ItemFormOutput,
   itemDefaults,
   itemSchema,
+  MAX_IMAGES,
   MAX_SPECIFICATIONS,
   toItemRequest,
 } from '@/pages/dashboard/catalogue/catalogue-schemas'
 import { SelectField, TextareaField } from '@/pages/dashboard/catalogue/form-controls'
 import { useCatalogueRefresh } from '@/pages/dashboard/catalogue/use-catalogue-refresh'
 import { LoadError, RentalThumb } from '@/pages/dashboard/dashboard-ui'
+import { cn } from '@/lib/utils'
 
 /** What the dialog is open for: a new item, or the item with this id. */
 export type ItemDialogTarget = { mode: 'create' } | { mode: 'edit'; id: number }
@@ -43,18 +45,23 @@ const topFields = [
   'name',
   'brand',
   'description',
-  'imageUrl',
   'dailyPrice',
   'deposit',
   'lateFeePerDay',
 ] as const
 
-/** A server path the form has a field for: a top-level field or one specification's key or value. */
+/** A server path the form has a field for: a top-level field, one photo, or one specification's key or value. */
 function isFormPath(path: string): path is Path<ItemFormInput> {
   return (
     (topFields as readonly string[]).includes(path) ||
+    /^images\.\d+\.url$/.test(path) ||
     /^specifications\.\d+\.(key|value)$/.test(path)
   )
+}
+
+/** The server's `imageUrls.1` is the form's `images.1.url`; the whole list is `images`. */
+function formPath(serverPath: string) {
+  return serverPath.replace(/^imageUrls(?=\.|$)/, 'images').replace(/^(images\.\d+)$/, '$1.url')
 }
 
 /**
@@ -139,7 +146,8 @@ function ItemForm({ item, onClose }: { item?: ItemDetailsDto; onClose: () => voi
     defaultValues: itemDefaults(item),
   })
   const specs = useFieldArray({ control, name: 'specifications' })
-  const imageUrl = useWatch({ control, name: 'imageUrl' })
+  const photos = useFieldArray({ control, name: 'images' })
+  const photoUrls = useWatch({ control, name: 'images' })
 
   // Known labels as suggestions, so admins reuse keys the item page already translates.
   const labels: Record<string, string> = t('item.specs.labels', { returnObjects: true })
@@ -157,12 +165,13 @@ function ItemForm({ item, onClose }: { item?: ItemDetailsDto; onClose: () => voi
         // The server's messages go next to their fields; anything else above the buttons.
         const leftover: string[] = []
         let focused = false
-        for (const [path, message] of Object.entries(serverErrorsByPath(error))) {
+        for (const [serverPath, message] of Object.entries(serverErrorsByPath(error))) {
+          const path = formPath(serverPath)
           if (isFormPath(path)) {
             setError(path, { message }, { shouldFocus: !focused })
             focused = true
-          } else if (path === 'specifications') {
-            setError('specifications', { message })
+          } else if (path === 'specifications' || path === 'images') {
+            setError(path, { message })
           } else {
             leftover.push(message)
           }
@@ -177,6 +186,7 @@ function ItemForm({ item, onClose }: { item?: ItemDetailsDto; onClose: () => voi
   })
 
   const specsError = errors.specifications?.root?.message ?? errors.specifications?.message
+  const photosError = errors.images?.root?.message ?? errors.images?.message
 
   return (
     <form noValidate onSubmit={onSubmit} className="contents">
@@ -204,6 +214,7 @@ function ItemForm({ item, onClose }: { item?: ItemDetailsDto; onClose: () => voi
         />
         <SelectField
           label={t('admin.items.category')}
+          className="sm:col-span-2"
           error={errors.categoryId?.message}
           disabled={categories.isPending}
           {...register('categoryId')}
@@ -215,23 +226,6 @@ function ItemForm({ item, onClose }: { item?: ItemDetailsDto; onClose: () => voi
             </option>
           ))}
         </SelectField>
-        <div className="flex items-start gap-3">
-          <FormField
-            label={t('admin.items.imageUrl')}
-            icon={Link2}
-            type="url"
-            inputMode="url"
-            placeholder="https://"
-            className="min-w-0 flex-1"
-            error={errors.imageUrl?.message}
-            {...register('imageUrl')}
-          />
-          <RentalThumb
-            key={imageUrl}
-            src={/^https?:\/\//i.test(imageUrl.trim()) ? imageUrl.trim() : null}
-            className="mt-[26px] size-9"
-          />
-        </div>
         <TextareaField
           label={t('admin.items.description')}
           className="sm:col-span-2"
@@ -239,6 +233,86 @@ function ItemForm({ item, onClose }: { item?: ItemDetailsDto; onClose: () => voi
           {...register('description')}
         />
       </div>
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 text-sm font-semibold">{t('admin.items.photos')}</legend>
+        <p className="text-xs text-muted-foreground">{t('admin.items.photosHint')}</p>
+
+        {photos.fields.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {photos.fields.map((field, index) => {
+              const urlError = errors.images?.[index]?.url?.message
+              const url = photoUrls[index]?.url.trim() ?? ''
+              const cover = index === 0
+              return (
+                <li
+                  key={field.id}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-start gap-2"
+                >
+                  <RentalThumb
+                    key={url}
+                    src={/^https?:\/\//i.test(url) ? url : null}
+                    className="size-9"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      aria-label={t('admin.items.photoUrl', { index: index + 1 })}
+                      aria-invalid={urlError ? true : undefined}
+                      type="url"
+                      inputMode="url"
+                      placeholder="https://"
+                      autoComplete="off"
+                      className="h-9 bg-background"
+                      {...register(`images.${index}.url`)}
+                    />
+                    {urlError && <p className="text-xs text-destructive">{urlError}</p>}
+                  </div>
+                  {/* The first photo is the cover; any other can be moved to the front. */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-lg"
+                    className={cn(cover ? 'disabled:opacity-100' : 'text-muted-foreground')}
+                    disabled={cover}
+                    onClick={() => photos.move(index, 0)}
+                  >
+                    <Star className={cn(cover && 'fill-highlight text-highlight')} aria-hidden />
+                    <span className="sr-only">
+                      {cover
+                        ? t('admin.items.cover')
+                        : t('admin.items.makeCover', { index: index + 1 })}
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-lg"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => photos.remove(index)}
+                  >
+                    <Trash2 aria-hidden />
+                    <span className="sr-only">
+                      {t('admin.items.removePhoto', { index: index + 1 })}
+                    </span>
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+        {photosError && <p className="text-xs text-destructive">{photosError}</p>}
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="w-fit px-3"
+          disabled={photos.fields.length >= MAX_IMAGES}
+          onClick={() => photos.append({ url: '' })}
+        >
+          <ImagePlus aria-hidden />
+          {t('admin.items.addPhoto')}
+        </Button>
+      </fieldset>
 
       <fieldset className="grid gap-4 sm:grid-cols-3">
         <legend className="mb-3 text-sm font-semibold">{t('admin.items.pricing')}</legend>

@@ -1,13 +1,7 @@
-import { ChevronRight, House, type LucideIcon } from 'lucide-react'
+import { ChevronRight, House } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-
-export interface PageHeaderStat {
-  icon: LucideIcon
-  value: ReactNode
-  label: string
-}
 
 export interface Crumb {
   label: string
@@ -21,100 +15,89 @@ interface PageHeaderProps {
   /** This page's name in the breadcrumb when it differs from the title, e.g. under a greeting. */
   crumb?: string
   description?: ReactNode
-  /** Real counts shown under the description, e.g. "33 items". */
-  stats?: PageHeaderStat[]
   /** A band illustration on the right; hidden below the lg breakpoint. */
   illustration?: ReactNode
 }
 
 /**
- * The dark band at the top of an inner page: breadcrumb, title, description, a row of stats
- * and a page illustration. It has no buttons: the page's actions live in its content below.
+ * The dark band at the top of every inner page, edge to edge: breadcrumb, title, description, a
+ * page illustration. Its content lines up with the page's content column. It has
+ * no buttons: the page's actions live in its content below.
  */
-export function PageHeader({
-  title,
-  trail,
-  crumb,
-  description,
-  stats,
-  illustration,
-}: PageHeaderProps) {
+export function PageHeader({ title, trail, crumb, description, illustration }: PageHeaderProps) {
+  return (
+    <section className="full-bleed relative mb-8 overflow-hidden bg-band text-band-foreground sm:mb-12 [&:not(.page-grid>*)]:rounded-2xl">
+      {/* A soft glow behind the illustration, as on the home page's band. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 -right-24 size-[28rem] rounded-full bg-band-raised blur-3xl lg:size-[36rem]"
+      />
+      <div className="relative container-page grid py-8 sm:py-10 lg:min-h-80 lg:grid-cols-[minmax(0,1fr)_420px] lg:py-12 xl:grid-cols-[minmax(0,1fr)_500px]">
+        <div className="relative z-10 flex min-w-0 flex-col items-start justify-center">
+          <BandBreadcrumb trail={trail} current={crumb ?? title} />
+
+          <h1 className="mt-3 max-w-full text-4xl font-extrabold tracking-[-0.03em] break-words sm:text-5xl lg:text-[56px] lg:leading-[60px]">
+            {title}
+          </h1>
+
+          {description && (
+            <p className="mt-3 max-w-150 text-band-muted sm:text-xl sm:leading-[30px]">
+              {description}
+            </p>
+          )}
+        </div>
+
+        {illustration && (
+          <div className="relative hidden lg:block">
+            <div className="absolute right-0 -bottom-12 w-[440px] xl:w-[520px]">{illustration}</div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Home › trail › this page, in the band's colours. The last crumb is cut short with an ellipsis
+ * when it does not fit.
+ */
+export function BandBreadcrumb({ trail, current }: { trail?: Crumb[]; current: string }) {
   const { t } = useTranslation()
 
   return (
-    <section className="relative mb-6 grid overflow-hidden rounded-2xl bg-band px-5 py-8 text-band-foreground sm:mb-10 sm:px-10 sm:py-10 lg:min-h-80 lg:grid-cols-[minmax(0,1fr)_420px] lg:rounded-4xl lg:py-12 lg:pr-0 lg:pl-12 xl:grid-cols-[minmax(0,1fr)_500px]">
-      <div className="relative z-10 flex flex-col items-start justify-center">
-        <nav aria-label={t('layout.breadcrumb')}>
-          <ol className="flex items-center gap-2.5 text-band-muted sm:text-base">
-            <li>
-              <Link
-                to="/"
-                aria-label={t('nav.home')}
-                className="flex rounded-sm text-band-accent outline-none hover:text-band-foreground focus-visible:ring-3 focus-visible:ring-band-accent"
-              >
-                <House className="size-5" aria-hidden />
-              </Link>
-            </li>
-            {trail?.map((crumb) => (
-              <Fragment key={crumb.to}>
-                <li aria-hidden>
-                  <ChevronRight className="size-4" />
-                </li>
-                <li>
-                  <Link
-                    to={crumb.to}
-                    className="rounded-sm outline-none hover:text-band-foreground focus-visible:ring-3 focus-visible:ring-band-accent"
-                  >
-                    {crumb.label}
-                  </Link>
-                </li>
-              </Fragment>
-            ))}
+    <nav aria-label={t('layout.breadcrumb')} className="max-w-full">
+      <ol className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-band-muted sm:text-base">
+        <li>
+          <Link
+            to="/"
+            aria-label={t('nav.home')}
+            className="flex rounded-sm text-band-accent outline-none hover:text-band-foreground focus-visible:ring-3 focus-visible:ring-band-accent"
+          >
+            <House className="size-5" aria-hidden />
+          </Link>
+        </li>
+        {trail?.map((crumb) => (
+          <Fragment key={crumb.to}>
             <li aria-hidden>
               <ChevronRight className="size-4" />
             </li>
-            <li aria-current="page">{crumb ?? title}</li>
-          </ol>
-        </nav>
-
-        <h1 className="mt-3 text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl lg:text-[56px] lg:leading-[60px]">
-          {title}
-        </h1>
-
-        {description && (
-          <p className="mt-3 max-w-150 text-band-muted sm:text-xl sm:leading-[30px]">
-            {description}
-          </p>
-        )}
-
-        {stats && stats.length > 0 && (
-          // Dividers only from xl, where the stats fit on one row; narrower, they wrap.
-          <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-4 xl:gap-x-0">
-            {stats.map(({ icon: Icon, value, label }) => (
-              <li
-                key={label}
-                className="flex items-center gap-3 xl:px-6 xl:not-first:border-l xl:not-first:border-band-line xl:first:pl-0"
+            <li>
+              <Link
+                to={crumb.to}
+                className="rounded-sm outline-none hover:text-band-foreground focus-visible:ring-3 focus-visible:ring-band-accent"
               >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-band-raised-2 text-band-accent sm:size-11">
-                  <Icon className="size-5" aria-hidden />
-                </span>
-                <span className="flex flex-col gap-0.5">
-                  <strong className="text-[22px] leading-7 font-bold tracking-[-0.02em] tabular-nums sm:text-[28px] sm:leading-8">
-                    {value}
-                  </strong>
-                  <span className="text-sm text-band-muted">{label}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {illustration && (
-        <div className="relative hidden lg:block">
-          <div className="absolute right-0 -bottom-8 w-[440px] xl:w-[520px]">{illustration}</div>
-        </div>
-      )}
-    </section>
+                {crumb.label}
+              </Link>
+            </li>
+          </Fragment>
+        ))}
+        <li aria-hidden>
+          <ChevronRight className="size-4" />
+        </li>
+        <li aria-current="page" className="min-w-0 truncate">
+          {current}
+        </li>
+      </ol>
+    </nav>
   )
 }

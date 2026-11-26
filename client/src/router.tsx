@@ -3,7 +3,9 @@ import { BASE_PATH } from '@/lib/config'
 import { AuthProvider } from '@/auth/auth-provider'
 import { pageRoles } from '@/auth/roles'
 import { GuestOnly, RequireAuth } from '@/auth/route-guards'
+import { CartProvider } from '@/cart/cart-provider'
 import { AppLayout } from '@/components/layout/app-layout'
+import { CartPage } from '@/pages/cart-page'
 import { CataloguePage } from '@/pages/catalogue-page'
 import { DashboardLayout } from '@/pages/dashboard/dashboard-layout'
 import { CatalogueAdminPage } from '@/pages/dashboard/catalogue/catalogue-admin-page'
@@ -27,7 +29,9 @@ export const router = createBrowserRouter(
       element: (
         <AuthProvider>
           <LiveAvailabilityProvider>
-            <Outlet />
+            <CartProvider>
+              <Outlet />
+            </CartProvider>
           </LiveAvailabilityProvider>
         </AuthProvider>
       ),
@@ -40,6 +44,8 @@ export const router = createBrowserRouter(
             { index: true, element: <HomePage /> },
             { path: 'catalogue', element: <CataloguePage /> },
             { path: 'catalogue/:id', element: <ItemPage /> },
+            // Guests may fill the cart too; booking it asks them to log in.
+            { path: 'cart', element: <CartPage /> },
 
             // Guests only: a signed-in user is sent on to where they were going.
             {

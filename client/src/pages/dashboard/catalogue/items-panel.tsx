@@ -64,7 +64,7 @@ export function ItemsPanel({ search, update, onCreate, onEdit, onRetire }: Items
           header: () => t('admin.items.columns.item'),
           cell: ({ row }) => (
             <div className="flex min-w-56 items-center gap-3">
-              <RentalThumb src={row.original.imageUrl} className="size-10" />
+              <RentalThumb src={row.original.imageUrls[0] ?? null} className="size-10" />
               <div className="min-w-0">
                 <Link
                   to={`/catalogue/${row.original.id}`}
@@ -189,7 +189,7 @@ export function ItemsPanel({ search, update, onCreate, onEdit, onRetire }: Items
         <ul className="flex flex-col gap-3 md:hidden">
           {table.getRowModel().rows.map(({ original: item }) => (
             <li key={item.id} className="flex gap-3 rounded-xl border bg-card p-4 text-sm">
-              <RentalThumb src={item.imageUrl} className="size-14" />
+              <RentalThumb src={item.imageUrls[0] ?? null} className="size-14" />
               <div className="min-w-0 flex-1">
                 <Link to={`/catalogue/${item.id}`} className="font-semibold hover:underline">
                   {item.name}

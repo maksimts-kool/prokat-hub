@@ -11,7 +11,7 @@ public class MapperTests
         Name = "Sony A7 IV",
         Brand = "Sony",
         Description = "Full-frame camera body.",
-        ImageUrl = "https://example.com/a7.jpg",
+        ImageUrls = ["https://example.com/a7.jpg", "https://example.com/a7-back.jpg"],
         CategoryId = 2,
         Category = new Category { Id = 2, Name = "Cameras", Slug = "cameras" },
         DailyPrice = 25m,
@@ -28,6 +28,7 @@ public class MapperTests
         Assert.Equal("Cameras", dto.CategoryName);
         Assert.Equal(2, dto.CategoryId);
         Assert.Equal(10m, dto.LateFeePerDay);
+        Assert.Equal(["https://example.com/a7.jpg", "https://example.com/a7-back.jpg"], dto.ImageUrls);
     }
 
     [Fact]

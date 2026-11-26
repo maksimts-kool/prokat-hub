@@ -119,7 +119,7 @@ public sealed class ItemService(
         item.Name = request.Name.Trim();
         item.Brand = request.Brand.Trim();
         item.Description = request.Description.Trim();
-        item.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
+        item.ImageUrls = (request.ImageUrls ?? []).Select(url => url.Trim()).ToList();
         item.DailyPrice = request.DailyPrice!.Value;
         item.Deposit = request.Deposit!.Value;
         item.LateFeePerDay = request.LateFeePerDay!.Value;

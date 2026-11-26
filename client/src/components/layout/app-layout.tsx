@@ -20,7 +20,8 @@ export function AppLayout() {
         id="main-content"
         // Focusable from the skip link only, so focus lands at the start of the page without a ring.
         tabIndex={-1}
-        className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 outline-none sm:px-6"
+        // Every page opens with a full-bleed band; the rest sits in the centred content column.
+        className="page-grid w-full flex-1 pb-16 outline-none"
       >
         <Outlet />
       </main>

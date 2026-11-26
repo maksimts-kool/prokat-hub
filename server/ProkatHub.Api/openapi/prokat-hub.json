@@ -1792,7 +1792,7 @@
           "dailyPrice",
           "deposit",
           "lateFeePerDay",
-          "imageUrl",
+          "imageUrls",
           "specifications"
         ],
         "type": "object",
@@ -1829,11 +1829,12 @@
             "type": "number",
             "format": "double"
           },
-          "imageUrl": {
-            "type": [
-              "null",
-              "string"
-            ]
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Photo URLs in display order; the first one is the cover. Empty when the item has none."
           },
           "specifications": {
             "type": "array",
@@ -1849,7 +1850,7 @@
           "name",
           "brand",
           "description",
-          "imageUrl",
+          "imageUrls",
           "dailyPrice",
           "deposit",
           "lateFeePerDay"
@@ -1876,11 +1877,17 @@
             "minLength": 1,
             "type": "string"
           },
-          "imageUrl": {
+          "imageUrls": {
             "type": [
               "null",
-              "string"
-            ]
+              "array"
+            ],
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "description": "Photo URLs in display order, the cover first; null or empty for no photos."
           },
           "dailyPrice": {
             "maximum": 100000,
@@ -1937,7 +1944,7 @@
           "categoryName",
           "dailyPrice",
           "deposit",
-          "imageUrl",
+          "imageUrls",
           "isAvailable"
         ],
         "type": "object",
@@ -1967,11 +1974,12 @@
             "type": "number",
             "format": "double"
           },
-          "imageUrl": {
-            "type": [
-              "null",
-              "string"
-            ]
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Photo URLs in display order; the first one is the cover. Empty when the item has none."
           },
           "isAvailable": {
             "type": [

@@ -16,7 +16,7 @@ export interface ItemDetailsDto {
   dailyPrice: number
   deposit: number
   lateFeePerDay: number
-  /** @nullable */
-  imageUrl: string | null
+  /** Photo URLs in display order; the first one is the cover. Empty when the item has none. */
+  imageUrls: string[]
   specifications: ItemSpecificationDto[]
 }

@@ -132,7 +132,7 @@ public sealed class DatabaseInitializer(
     {
         if (await db.Categories.AnyAsync(cancellationToken))
         {
-            await BackfillDemoSpecificationsAsync(cancellationToken);
+            await BackfillDemoDetailsAsync(cancellationToken);
             return;
         }
 
@@ -143,20 +143,35 @@ public sealed class DatabaseInitializer(
             categories.Count, categories.Sum(c => c.Items.Count));
     }
 
-    /// <summary>Gives demo items seeded before specifications existed their specifications.</summary>
-    private async Task BackfillDemoSpecificationsAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Gives demo items seeded by an older version what they lack: specifications, and the photo set
+    /// in place of the single placeholder. Photos an admin chose are left alone.
+    /// </summary>
+    private async Task BackfillDemoDetailsAsync(CancellationToken cancellationToken)
     {
         var items = await db.Items.ToListAsync(cancellationToken);
-        var filled = 0;
-        foreach (var item in items.Where(i => i.Specifications.Count == 0))
+        var specified = 0;
+        var photographed = 0;
+        foreach (var item in items)
         {
-            item.Specifications = DemoCatalogue.SpecificationsFor(item.Name);
-            if (item.Specifications.Count > 0) filled++;
+            if (item.Specifications.Count == 0)
+            {
+                item.Specifications = DemoCatalogue.SpecificationsFor(item.Name);
+                if (item.Specifications.Count > 0) specified++;
+            }
+
+            if (DemoCatalogue.IsDemoItem(item.Name)
+                && item.ImageUrls is [var only] && only == DemoCatalogue.LegacyImageFor(item.Name))
+            {
+                item.ImageUrls = DemoCatalogue.ImagesFor(item.Name);
+                photographed++;
+            }
         }
 
-        if (filled == 0) return;
+        if (specified == 0 && photographed == 0) return;
         await db.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Added specifications to {Items} demo items", filled);
+        logger.LogInformation("Backfilled demo items: {Specified} with specifications, {Photographed} with photos",
+            specified, photographed);
     }
 
     private async Task SeedDemoRentalsAsync(CancellationToken cancellationToken)

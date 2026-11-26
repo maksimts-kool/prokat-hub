@@ -16,8 +16,8 @@ export interface ItemSummaryDto {
   categoryName: string
   dailyPrice: number
   deposit: number
-  /** @nullable */
-  imageUrl: string | null
+  /** Photo URLs in display order; the first one is the cover. Empty when the item has none. */
+  imageUrls: string[]
   /**
    * Whether the item is free on every day of the `from`–`to` range of the request;
    * null when the request has no dates.

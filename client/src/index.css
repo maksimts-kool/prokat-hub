@@ -169,3 +169,63 @@
     @apply font-sans;
   }
 }
+
+/*
+ * The page grid behind <main>: a centred content column (max-w-7xl minus its padding) between two
+ * gutters. Children sit in the content column; a `full-bleed` child spans the whole viewport width
+ * without the scrollbar-width overflow of `100vw`.
+ */
+@layer components {
+  .page-grid {
+    display: grid;
+    align-content: start;
+    grid-template-columns:
+      [full-start] minmax(1rem, 1fr)
+      [content-start] minmax(0, 77rem)
+      [content-end] minmax(1rem, 1fr)
+      [full-end];
+  }
+  @media (width >= 40rem) {
+    .page-grid {
+      grid-template-columns:
+        [full-start] minmax(1.5rem, 1fr)
+        [content-start] minmax(0, 77rem)
+        [content-end] minmax(1.5rem, 1fr)
+        [full-end];
+    }
+  }
+  .page-grid > * {
+    grid-column: content;
+  }
+  .page-grid > .full-bleed {
+    grid-column: full;
+  }
+}
+
+/* A centred column inside a full-bleed section, lined up with the page grid's content column. */
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1rem;
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+}
+
+/*
+ * Band colours for a whole region, e.g. the site header: the surface tokens become the band's, so
+ * the components inside (nav pill, language switcher, account menu) sit on it without their own
+ * dark variants. Brand colours (primary, highlight) stay the same.
+ */
+.on-band {
+  --background: var(--band);
+  --foreground: var(--band-foreground);
+  --muted: var(--band-raised);
+  --muted-foreground: var(--band-muted);
+  --secondary: var(--band-raised);
+  --border: var(--band-raised-2);
+  --input: var(--band-line);
+  --ring: var(--band-accent);
+  color: var(--band-foreground);
+}

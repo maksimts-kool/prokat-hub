@@ -325,9 +325,9 @@ namespace ProkatHub.Api.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
+                    b.Property<string>("ImageUrls")
+                        .IsRequired()
+                        .HasColumnType("json");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");

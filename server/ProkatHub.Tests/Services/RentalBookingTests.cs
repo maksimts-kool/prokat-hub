@@ -35,7 +35,7 @@ public class RentalBookingTests
             Name = "GoPro HERO13 Black",
             Brand = "GoPro",
             Description = "Action camera",
-            ImageUrl = "https://example.test/gopro.png",
+            ImageUrls = ["https://example.test/gopro.png", "https://example.test/gopro-side.png"],
             DailyPrice = 20m,
             Deposit = 250m,
             LateFeePerDay = 30m,

@@ -15,6 +15,8 @@ const SPEC_KEY_PATTERN = /^[a-z][a-zA-Z0-9]{0,39}$/
 
 /** `ItemRequestValidator.MaxSpecifications`. */
 export const MAX_SPECIFICATIONS = 20
+/** `ItemRequestValidator.MaxImages`. */
+export const MAX_IMAGES = 8
 
 /** The slug the server makes from a name left without one: "Gaming consoles" → "gaming-consoles". */
 export function toSlug(name: string): string {
@@ -115,11 +117,18 @@ export function itemSchema(t: TFunction) {
       .trim()
       .min(1, t('admin.validation.required'))
       .max(2000, t('admin.validation.max', { count: 2000 })),
-    imageUrl: z
-      .string()
-      .trim()
-      .max(500, t('admin.validation.max', { count: 500 }))
-      .refine((value) => value === '' || isHttpUrl(value), t('admin.items.imageUrlRule')),
+    images: z
+      .array(
+        z.object({
+          url: z
+            .string()
+            .trim()
+            .min(1, t('admin.validation.required'))
+            .max(500, t('admin.validation.max', { count: 500 }))
+            .refine(isHttpUrl, t('admin.items.photoUrlRule')),
+        }),
+      )
+      .max(MAX_IMAGES, t('admin.items.photosMax', { count: MAX_IMAGES })),
     dailyPrice: money(t, 0.01, 100_000),
     deposit: money(t, 0, 1_000_000),
     lateFeePerDay: money(t, 0, 100_000),
@@ -165,7 +174,7 @@ export function itemDefaults(item?: ItemDetailsDto): ItemFormInput {
     name: item?.name ?? '',
     brand: item?.brand ?? '',
     description: item?.description ?? '',
-    imageUrl: item?.imageUrl ?? '',
+    images: item?.imageUrls.map((url) => ({ url })) ?? [],
     dailyPrice: item ? item.dailyPrice.toFixed(2) : '',
     deposit: item ? item.deposit.toFixed(2) : '',
     lateFeePerDay: item ? item.lateFeePerDay.toFixed(2) : '',
@@ -173,7 +182,7 @@ export function itemDefaults(item?: ItemDetailsDto): ItemFormInput {
   }
 }
 
-/** The request body for a valid form. A blank image URL means "no image". */
-export function toItemRequest(values: ItemFormOutput): ItemRequest {
-  return { ...values, imageUrl: values.imageUrl || null }
+/** The request body for a valid form: the photo rows become the list of URLs, cover first. */
+export function toItemRequest({ images, ...values }: ItemFormOutput): ItemRequest {
+  return { ...values, imageUrls: images.map((image) => image.url) }
 }

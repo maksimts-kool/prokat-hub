@@ -20,7 +20,6 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
         builder.Property(i => i.Name).HasMaxLength(150);
         builder.Property(i => i.Brand).HasMaxLength(80);
         builder.Property(i => i.Description).HasMaxLength(2000);
-        builder.Property(i => i.ImageUrl).HasMaxLength(500);
 
         // The list is stored as JSON text in one column. Pomelo doesn't support ToJson() owned collections, so a
         // value converter serializes it; the comparer lets change tracking notice edits inside the list.
@@ -33,6 +32,16 @@ public class ItemConfiguration : IEntityTypeConfiguration<Item>
                     specs => JsonSerializer.Serialize(specs, SpecificationJson).GetHashCode(),
                     specs => JsonSerializer.Deserialize<List<ItemSpecification>>(
                         JsonSerializer.Serialize(specs, SpecificationJson), SpecificationJson)!))
+            .HasColumnType("json");
+
+        builder.Property(i => i.ImageUrls)
+            .HasConversion(
+                urls => JsonSerializer.Serialize(urls, SpecificationJson),
+                json => JsonSerializer.Deserialize<List<string>>(json, SpecificationJson) ?? new List<string>(),
+                new ValueComparer<List<string>>(
+                    (a, b) => a!.SequenceEqual(b!),
+                    urls => urls.Aggregate(0, (hash, url) => HashCode.Combine(hash, url.GetHashCode())),
+                    urls => urls.ToList()))
             .HasColumnType("json");
 
         builder.HasOne(i => i.Category)
