@@ -109,7 +109,11 @@ dotnet user-secrets set "Seed:Accounts:Customer:Password" "Customer12345"
 dotnet run
 ```
 
-Run the tests with `dotnet test server/ProkatHub.slnx`. Add a migration with:
+Run the tests with `dotnet test server/ProkatHub.slnx`.
+
+[`http/prokat-hub.http`](http/prokat-hub.http) holds the manual API tests. You can use it in the VS Code REST Client, Visual Studio or Rider. Set `@today` at the top to today's date, then run the requests from top to bottom against a running stack. The login requests fill in the token for each role. The title of each request gives the status code it expects, including the 400, 401, 403, 404 and 409 cases.
+
+Add a migration with:
 
 ```bash
 cd server
