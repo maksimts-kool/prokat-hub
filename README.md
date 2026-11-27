@@ -69,13 +69,12 @@ The whole system is one responsive React website and an ASP.NET Core Web API, wi
 
 **Platform**
 
-- Four roles (Customer, Staff, Admin, Service) with JWT authentication and role-based access
+- JWT authentication with role-based access
 - English and Estonian interface, switchable at any time
 - Responsive from 375 px phones to desktops; Lighthouse accessibility score 100 on every page ([QA report](docs/qa-responsive-accessibility.md))
-- Request validation with FluentValidation and consistent `ProblemDetails` errors
+- Request validation with FluentValidation
 - Structured request logs with Serilog, with a trace id that matches the error response
 - Swagger UI and an OpenAPI document; the client's API code is generated from it with Orval
-- Database migrations and demo data are applied on start, so a fresh clone works straight away
 
 ## <img src="docs/icons/images.svg" height="28" alt="">Screenshots
 
@@ -103,7 +102,7 @@ The whole system is one responsive React website and an ASP.NET Core Web API, wi
 | **API** | .NET 10, ASP.NET Core Web API (controllers), EF Core with Pomelo (MariaDB), ASP.NET Core Identity + JWT, FluentValidation, Mapperly, SignalR, Serilog, Swagger UI |
 | **Worker** | .NET 10 Worker Service, typed `HttpClient` with Polly resilience (retries, timeouts, circuit breaker) |
 | **Database** | MariaDB 11.4 |
-| **Tests** | xUnit, NSubstitute (238 tests) |
+| **Tests** | xUnit, NSubstitute |
 | **Tooling** | Docker Compose, GitHub Actions, oxlint, Prettier, pnpm |
 
 ## <img src="docs/icons/network.svg" height="28" alt="">Architecture
@@ -127,7 +126,7 @@ flowchart LR
 
 - The **web** container serves the React app. The browser then calls the **API** directly with a JWT in the `Authorization` header.
 - The **API** is layered: controllers → services (business rules) → repositories (EF Core) → MariaDB. Validation, mapping and error handling sit beside them.
-- The **worker** has no database access. It logs in to the API like any client and calls `GET /api/rentals/overdue` and `POST /api/rentals/{id}/mark-late`.
+- The **worker** has no database access. It logs in to the API as the Service account, like any other client.
 - A **SignalR hub** pushes `AvailabilityChanged` events to signed-in browsers whenever a booking, cancellation or return changes an item's free days.
 
 The domain model, ER diagram, status flow and pricing rules are in [docs/er-diagram.md](docs/er-diagram.md).
@@ -215,9 +214,7 @@ An account is skipped when its password is empty, except Service, which the work
 
 ## <img src="docs/icons/code.svg" height="28" alt="">API
 
-Interactive docs are at **http://localhost:8080/swagger** while the stack runs in Development.
-
-To call protected endpoints in Swagger:
+To call protected endpoints in [Swagger UI](http://localhost:8080/swagger):
 
 1. Run `POST /api/auth/login` with a demo account.
 2. Copy `accessToken` from the response.
@@ -274,13 +271,11 @@ docker compose exec web pnpm format:check
 docker compose exec web pnpm build
 ```
 
-[GitHub Actions](.github/workflows/ci.yml) runs all of these on every push and pull request, and builds every Docker image.
-
 ## <img src="docs/icons/folder-tree.svg" height="28" alt="">Project structure
 
 ```text
 prokat-hub/
-├── client/                    React web client (Vite, TypeScript, Tailwind, shadcn/ui)
+├── client/                    React web client
 │   ├── public/                Logo and favicon
 │   └── src/
 │       ├── api/               HTTP client and Orval-generated API hooks
@@ -290,7 +285,7 @@ prokat-hub/
 │       ├── pages/             Pages, including the dashboard (desk, catalogue, reports)
 │       └── realtime/          SignalR live availability
 ├── server/
-│   ├── ProkatHub.Api/         Web API: controllers, services, repositories, EF Core, Identity + JWT
+│   ├── ProkatHub.Api/         ASP.NET Core Web API
 │   ├── ProkatHub.Worker/      Hourly overdue worker that calls the API
 │   └── ProkatHub.Tests/       xUnit tests
 ├── docs/                      Domain model, ER diagram, QA report, screenshots
@@ -329,8 +324,6 @@ Levels and the output format are in the `Serilog` section of `appsettings.json`.
 ```bash
 docker compose logs -f worker
 ```
-
-The worker only talks to the API over HTTP and has no database access.
 
 </details>
 
@@ -421,12 +414,6 @@ deploy/zone/db-query.sh "SELECT Email FROM AspNetUsers"   # SQL against the live
 | Docker images | `docker compose build` for the dev images, plus the production API and web images |
 
 </details>
-
-**Further reading**
-
-- [Domain model, ER diagram and business rules](docs/er-diagram.md)
-- [Responsive and accessibility QA report](docs/qa-responsive-accessibility.md)
-- [Web client README](client/README.md)
 
 ## <img src="docs/icons/scale.svg" height="28" alt="">License
 
