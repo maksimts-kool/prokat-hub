@@ -16,13 +16,6 @@
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-[Quick start](#quick-start) •
-[Features](#features) •
-[Screenshots](#screenshots) •
-[Architecture](#architecture) •
-[API](#api) •
-[Tests](#tests)
-
 <img src="docs/screenshots/desktop-home.png" alt="Prokat Hub home page" width="100%">
 
 </div>
