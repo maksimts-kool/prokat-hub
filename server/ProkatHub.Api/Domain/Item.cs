@@ -9,7 +9,8 @@ public class Item
     public required string Name { get; set; }
     public required string Brand { get; set; }
     public required string Description { get; set; }
-    public string? ImageUrl { get; set; }
+    /// <summary>Photo URLs in display order, stored as a JSON column. The first one is the cover.</summary>
+    public List<string> ImageUrls { get; set; } = [];
     public decimal DailyPrice { get; set; }
     public decimal Deposit { get; set; }
     public decimal LateFeePerDay { get; set; }

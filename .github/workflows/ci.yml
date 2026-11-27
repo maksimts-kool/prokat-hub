@@ -104,3 +104,8 @@ jobs:
         run: docker compose build api
         env:
           API_BUILD_TARGET: final
+
+      - name: Build production web image
+        run: docker compose build web
+        env:
+          WEB_BUILD_TARGET: final

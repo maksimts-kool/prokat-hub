@@ -6,8 +6,8 @@ namespace ProkatHub.Tests.Validation;
 
 public class CatalogueRequestValidatorTests
 {
-    private static ItemRequest ValidItem(string? imageUrl = null, IReadOnlyList<ItemSpecificationDto>? specs = null) =>
-        new(1, "Sony A7 IV", "Sony", "Full-frame camera body.", imageUrl, 25m, 300m, 10m, specs);
+    private static ItemRequest ValidItem(IReadOnlyList<string>? imageUrls = null, IReadOnlyList<ItemSpecificationDto>? specs = null) =>
+        new(1, "Sony A7 IV", "Sony", "Full-frame camera body.", imageUrls, 25m, 300m, 10m, specs);
 
     [Fact]
     public void Camel_case_specification_keys_are_accepted()
@@ -36,6 +36,15 @@ public class CatalogueRequestValidatorTests
         result.ShouldHaveValidationErrorFor("Specifications[1].Value");
     }
 
+    [Fact]
+    public void Prices_with_more_than_two_decimals_are_rejected()
+    {
+        var result = new ItemRequestValidator().TestValidate(ValidItem() with { DailyPrice = 25.005m, Deposit = 300.10m });
+
+        result.ShouldHaveValidationErrorFor(x => x.DailyPrice);
+        result.ShouldNotHaveValidationErrorFor(x => x.Deposit);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -57,22 +66,33 @@ public class CatalogueRequestValidatorTests
             .Only();
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("  ")]
-    [InlineData("https://example.com/a7.jpg")]
-    public void Blank_or_http_image_url_is_accepted(string? imageUrl)
+    [Fact]
+    public void No_images_or_http_image_urls_are_accepted()
     {
-        new ItemRequestValidator().TestValidate(ValidItem(imageUrl)).ShouldNotHaveAnyValidationErrors();
+        new ItemRequestValidator().TestValidate(ValidItem()).ShouldNotHaveAnyValidationErrors();
+        new ItemRequestValidator().TestValidate(ValidItem([])).ShouldNotHaveAnyValidationErrors();
+        new ItemRequestValidator().TestValidate(ValidItem(["https://example.com/a7.jpg", "http://example.com/a7-back.jpg"]))
+            .ShouldNotHaveAnyValidationErrors();
     }
 
     [Theory]
     [InlineData("ftp://example.com/a7.jpg")]
     [InlineData("a7.jpg")]
+    [InlineData("  ")]
     public void Other_image_urls_are_rejected(string imageUrl)
     {
-        new ItemRequestValidator().TestValidate(ValidItem(imageUrl))
-            .ShouldHaveValidationErrorFor(x => x.ImageUrl)
+        new ItemRequestValidator().TestValidate(ValidItem(["https://example.com/a7.jpg", imageUrl]))
+            .ShouldHaveValidationErrorFor("ImageUrls[1]")
+            .Only();
+    }
+
+    [Fact]
+    public void Too_many_images_are_rejected()
+    {
+        var urls = Enumerable.Range(1, ItemRequestValidator.MaxImages + 1).Select(i => $"https://example.com/{i}.jpg").ToList();
+
+        new ItemRequestValidator().TestValidate(ValidItem(urls))
+            .ShouldHaveValidationErrorFor(x => x.ImageUrls)
             .Only();
     }
 
@@ -88,6 +108,6 @@ public class CatalogueRequestValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.DailyPrice);
         result.ShouldHaveValidationErrorFor(x => x.Deposit);
         result.ShouldHaveValidationErrorFor(x => x.LateFeePerDay);
-        result.ShouldNotHaveValidationErrorFor(x => x.ImageUrl);
+        result.ShouldNotHaveValidationErrorFor(x => x.ImageUrls);
     }
 }

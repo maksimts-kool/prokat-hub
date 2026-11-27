@@ -8,11 +8,13 @@ export function ForbiddenPage() {
   const { t } = useTranslation()
 
   return (
-    <div>
+    <>
       <PageHeader title={t('forbidden.title')} description={t('forbidden.description')} />
-      <Button asChild variant="outline">
-        <Link to="/">{t('forbidden.backHome')}</Link>
-      </Button>
-    </div>
+      <div>
+        <Button asChild variant="outline" size="lg" className="px-4">
+          <Link to="/">{t('forbidden.backHome')}</Link>
+        </Button>
+      </div>
+    </>
   )
 }

@@ -34,8 +34,11 @@ builder.Services.AddSerilog((services, logger) => logger
     .Enrich.FromLogContext());
 
 // --- Database & Identity ---
+// MariaDB through Pomelo. The server version is set in config instead of detected, so startup and `dotnet ef`
+// don't need a live connection; it decides which SQL features the generated queries and migrations may use.
+var mariaDbVersion = new MariaDbServerVersion(builder.Configuration.GetValue("Database:ServerVersion", "10.11")!);
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseMySql(builder.Configuration.GetConnectionString("Default"), mariaDbVersion));
 
 builder.Services
     .AddIdentityCore<AppUser>(options =>
@@ -96,10 +99,12 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
 builder.Services.AddScoped<IDiscountTierRepository, DiscountTierRepository>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
 builder.Services.AddSingleton<IPricingService, PricingService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IRentalService, RentalService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<ITokenService, JwtTokenService>();
 
@@ -171,6 +176,24 @@ if (!isGeneratingOpenApiDocument)
     await initializer.InitializeAsync(app.Configuration.GetValue<bool>("Database:MigrateOnStartup"));
 }
 
+// Behind a reverse proxy under a sub-path (Zone serves the app at /prokathub), requests start with that prefix.
+// It moves into PathBase so routes stay /api/... and the static files below still match. This isn't UsePathBase:
+// in a WebApplication that runs routing right away, so the client fallback route would win over static files.
+// Requests without the prefix (the worker calls the API directly) pass through unchanged.
+if (app.Configuration["PathBase"] is { Length: > 0 } pathBase)
+{
+    app.Use((context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments(pathBase, out var matched, out var remaining))
+        {
+            context.Request.PathBase = context.Request.PathBase.Add(matched);
+            context.Request.Path = remaining;
+        }
+
+        return next(context);
+    });
+}
+
 // First in the pipeline so it sees the final status code, including errors turned into ProblemDetails.
 app.UseSerilogRequestLogging(RequestLogging.Configure);
 app.UseExceptionHandler();
@@ -187,6 +210,26 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// A production build of the React client in wwwroot is served by the API itself (one origin, so no CORS).
+// In development Vite serves it instead and wwwroot doesn't exist.
+var servesClient = app.Environment.WebRootFileProvider.GetFileInfo("index.html").Exists;
+if (servesClient)
+{
+    app.UseDefaultFiles();
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        // Vite puts a content hash in every file name under assets/, so those never change.
+        OnPrepareResponse = context =>
+        {
+            if (context.Context.Request.Path.StartsWithSegments("/assets"))
+            {
+                context.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+            }
+        },
+    });
+}
+
+app.UseRouting();
 app.UseCors(ClientCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
@@ -194,5 +237,10 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapControllers();
 app.MapHub<AvailabilityHub>(AvailabilityHub.Path);
+if (servesClient)
+{
+    // Client-side routes such as /items/5 get index.html; unknown /api and /ws paths still return 404.
+    app.MapFallbackToFile("{*path:regex(^(?!api/|ws/).*$)}", "index.html");
+}
 
 app.Run();

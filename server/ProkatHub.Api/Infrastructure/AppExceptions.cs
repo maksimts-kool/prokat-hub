@@ -13,8 +13,13 @@ public sealed class NotFoundException(string message) : AppException(message)
     public override string Title => "Not found";
 }
 
-public sealed class ConflictException(string message) : AppException(message)
+/// <param name="field">
+/// The request field the clash is about, e.g. <c>Name</c> for a name in use. The response then also lists the
+/// message under <c>errors</c>, as a 400 does, so a form can show it next to that field.
+/// </param>
+public sealed class ConflictException(string message, string? field = null) : AppException(message)
 {
+    public string? Field { get; } = field;
     public override int StatusCode => StatusCodes.Status409Conflict;
     public override string Title => "Conflict";
 }

@@ -1,5 +1,5 @@
 import { keepPreviousData } from '@tanstack/react-query'
-import { LayoutGrid, Loader2, Package, Percent, SearchX, SlidersHorizontal, X } from 'lucide-react'
+import { Loader2, SearchX, SlidersHorizontal, X } from 'lucide-react'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { apiErrorMessage } from '@/api/error-message'
@@ -8,7 +8,7 @@ import { useGetApiItems } from '@/api/generated/items/items'
 import { categoryIcon } from '@/components/category-icon'
 import { FormAlert } from '@/components/form-alert'
 import { CatalogueIllustration } from '@/components/illustrations/catalogue-illustration'
-import { ItemCard, ItemCardSkeleton } from '@/components/item-card'
+import { ItemCard, ItemCardSkeleton, itemGridClass } from '@/components/item-card'
 import { PageHeader } from '@/components/page-header'
 import { Pagination } from '@/components/pagination'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { useFormat } from '@/i18n/format'
+import { cn } from '@/lib/utils'
 import {
   CATALOGUE_PAGE_SIZE,
   type CatalogueFilters,
@@ -33,7 +34,7 @@ import {
 } from '@/pages/catalogue/catalogue-filters'
 import { FilterFields, SearchField } from '@/pages/catalogue/filter-panel'
 
-const grid = 'grid gap-6 sm:grid-cols-2 xl:grid-cols-3'
+const grid = cn(itemGridClass, 'md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3')
 
 export function CataloguePage() {
   const { t } = useTranslation()
@@ -65,8 +66,6 @@ export function CataloguePage() {
 
   const slugById = new Map(categories.data?.map((category) => [category.id, category.slug]))
   const categoryName = categories.data?.find((c) => c.id === filters.categoryId)?.name
-  // The whole catalogue's size for the header, whatever the filters.
-  const catalogueSize = categories.data?.reduce((sum, category) => sum + category.itemCount, 0)
   const dates = dateRangeState(filters)
   const chosenDates = dates.kind === 'valid' ? { from: dates.from, to: dates.to } : undefined
 
@@ -75,23 +74,6 @@ export function CataloguePage() {
       <PageHeader
         title={t('catalogue.title')}
         description={t('catalogue.description')}
-        stats={[
-          {
-            icon: Package,
-            value: catalogueSize ?? '–',
-            label: t('catalogue.stats.items'),
-          },
-          {
-            icon: LayoutGrid,
-            value: categories.data?.length ?? '–',
-            label: t('catalogue.stats.categories'),
-          },
-          {
-            icon: Percent,
-            value: t('catalogue.stats.discountValue'),
-            label: t('catalogue.stats.discount'),
-          },
-        ]}
         illustration={<CatalogueIllustration className="block h-auto w-full overflow-visible" />}
       />
 
@@ -178,7 +160,7 @@ export function CataloguePage() {
               <>
                 <ul className={grid}>
                   {data.items.map((item) => (
-                    <li key={item.id} className="flex flex-col *:flex-1">
+                    <li key={item.id}>
                       <ItemCard
                         item={item}
                         icon={categoryIcon(slugById.get(item.categoryId))}

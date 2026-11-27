@@ -1,6 +1,10 @@
 # Requests for the Prokat Hub API.
 # Works with the VS Code REST Client extension, Visual Studio and JetBrains Rider.
 # Passwords are the SEED_*_PASSWORD values from your .env file.
+#
+# Run the requests from top to bottom: each "Log in as …" request fills its role's token
+# variable below, and later requests reuse the rental, category and item created earlier.
+# The expected status code is in each request's title.
 
 @baseUrl = http://localhost:8080
 @customerEmail = customer@prokathub.test
@@ -11,9 +15,16 @@
 @adminPassword = Admin12345
 @serviceEmail = service@prokathub.test
 @servicePassword = Service12345
-# Change these to dates from today onwards before running the availability requests.
-@from = 2026-12-01
-@to = 2026-12-14
+# Set today to today's date (UTC). From and to must not be in the past.
+@today = 2026-11-26
+@from = 2027-01-11
+@to = 2027-01-17
+
+# Bearer tokens, filled in by the login requests (customerLogin, staffLogin, serviceLogin, adminLogin).
+@customerToken = {{customerLogin.response.body.$.accessToken}}
+@staffToken = {{staffLogin.response.body.$.accessToken}}
+@serviceToken = {{serviceLogin.response.body.$.accessToken}}
+@adminToken = {{adminLogin.response.body.$.accessToken}}
 
 ### Health check
 GET {{baseUrl}}/health
@@ -75,12 +86,12 @@ GET {{baseUrl}}/api/rentals/quote?from={{from}}&to={{to}}
 ### Rental quote for an unknown item → 404 ProblemDetails
 GET {{baseUrl}}/api/rentals/quote?itemId=99999&from={{from}}&to={{to}}
 
-### Register a new customer → 201
+### Register a new customer → 201 ($timestamp keeps the email unique on every run)
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "new.customer@example.com",
+  "email": "new.customer.{{$timestamp}}@example.com",
   "password": "Password123",
   "fullName": "New Customer"
 }
@@ -106,12 +117,12 @@ Content-Type: application/json
 
 ### Current user
 GET {{baseUrl}}/api/auth/me
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 
 ### Book an item (Customer) → 201 with the rental; the price is calculated on the server
 # @name newRental
 POST {{baseUrl}}/api/rentals
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
@@ -122,7 +133,7 @@ Content-Type: application/json
 
 ### Book the same item for overlapping days → 409 ProblemDetails
 POST {{baseUrl}}/api/rentals
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
@@ -133,7 +144,7 @@ Content-Type: application/json
 
 ### Book without dates → 400 ValidationProblemDetails
 POST {{baseUrl}}/api/rentals
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
@@ -142,7 +153,7 @@ Content-Type: application/json
 
 ### Book an unknown item → 404 ProblemDetails
 POST {{baseUrl}}/api/rentals
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
@@ -153,7 +164,7 @@ Content-Type: application/json
 
 ### My rentals (Customer) → 200
 GET {{baseUrl}}/api/rentals/my
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 
 ### My rentals without a token → 401
 GET {{baseUrl}}/api/rentals/my
@@ -170,31 +181,31 @@ Content-Type: application/json
 
 ### My rentals with a Staff token → 403
 GET {{baseUrl}}/api/rentals/my
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Authorization: Bearer {{staffToken}}
 
 ### All rentals (Staff) → 200, one page, newest first
 GET {{baseUrl}}/api/rentals?page=1&pageSize=20
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Authorization: Bearer {{staffToken}}
 
 ### Rentals at the desk: Issued or Overdue
 GET {{baseUrl}}/api/rentals?status=Issued&status=Overdue
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Authorization: Bearer {{staffToken}}
 
 ### Booked rentals that cover some day of a range
 GET {{baseUrl}}/api/rentals?status=Booked&from={{from}}&to={{to}}
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Authorization: Bearer {{staffToken}}
 
 ### Unknown status filter → 400 ValidationProblemDetails
 GET {{baseUrl}}/api/rentals?status=Lost
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Authorization: Bearer {{staffToken}}
 
 ### All rentals with a Customer token → 403
 GET {{baseUrl}}/api/rentals
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 
 ### Customer tries to issue their own rental → 403 ProblemDetails (staff only)
-PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/status
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
@@ -202,8 +213,8 @@ Content-Type: application/json
 }
 
 ### Staff issues a rental before its start date → 409 ProblemDetails
-PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/status
+Authorization: Bearer {{staffToken}}
 Content-Type: application/json
 
 {
@@ -211,8 +222,8 @@ Content-Type: application/json
 }
 
 ### Booked → Returned is not a valid change → 409 ProblemDetails
-PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/status
+Authorization: Bearer {{staffToken}}
 Content-Type: application/json
 
 {
@@ -220,8 +231,8 @@ Content-Type: application/json
 }
 
 ### Status missing → 400 ValidationProblemDetails
-PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/status
+Authorization: Bearer {{staffToken}}
 Content-Type: application/json
 
 {
@@ -230,7 +241,7 @@ Content-Type: application/json
 
 ### Unknown rental → 404 ProblemDetails
 PATCH {{baseUrl}}/api/rentals/99999/status
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Authorization: Bearer {{staffToken}}
 Content-Type: application/json
 
 {
@@ -238,8 +249,8 @@ Content-Type: application/json
 }
 
 ### Customer cancels their booking → 200 with status Cancelled
-PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/status
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
@@ -248,12 +259,52 @@ Content-Type: application/json
 }
 
 ### Cancel it again → 409 ProblemDetails
-PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/status
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+PATCH {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/status
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
   "status": "Cancelled"
+}
+
+### Book an item for today (Customer) → 201, so staff can issue it
+# @name todayRental
+POST {{baseUrl}}/api/rentals
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "itemId": 4,
+  "from": "{{today}}",
+  "to": "{{today}}"
+}
+
+### Staff issues it at the desk → 200 with status Issued and issuedAt
+PATCH {{baseUrl}}/api/rentals/{{todayRental.response.body.$.id}}/status
+Authorization: Bearer {{staffToken}}
+Content-Type: application/json
+
+{
+  "status": "Issued",
+  "note": "ID checked, deposit taken"
+}
+
+### Customer cancels an issued rental → 409 ProblemDetails
+PATCH {{baseUrl}}/api/rentals/{{todayRental.response.body.$.id}}/status
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "status": "Cancelled"
+}
+
+### Staff takes it back on time → 200 with status Returned and lateFeeTotal 0
+PATCH {{baseUrl}}/api/rentals/{{todayRental.response.body.$.id}}/status
+Authorization: Bearer {{staffToken}}
+Content-Type: application/json
+
+{
+  "status": "Returned"
 }
 
 ### Log in as the Service account (used by the overdue worker)
@@ -269,15 +320,15 @@ Content-Type: application/json
 ### Overdue rentals (Service) → 200, Issued or Overdue past their end date, oldest first
 # @name overdue
 GET {{baseUrl}}/api/rentals/overdue
-Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+Authorization: Bearer {{serviceToken}}
 
 ### Overdue rentals (Staff) → 200
 GET {{baseUrl}}/api/rentals/overdue
-Authorization: Bearer {{staffLogin.response.body.accessToken}}
+Authorization: Bearer {{staffToken}}
 
 ### Overdue rentals with a Customer token → 403
 GET {{baseUrl}}/api/rentals/overdue
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 
 ### Overdue rentals without a token → 401
 GET {{baseUrl}}/api/rentals/overdue
@@ -285,23 +336,23 @@ GET {{baseUrl}}/api/rentals/overdue
 ### Mark the first overdue rental late → 200, status Overdue, lateDays × lateFeePerDay = lateFeeTotal
 # Needs at least one rental in the overdue list.
 POST {{baseUrl}}/api/rentals/{{overdue.response.body.$[0].id}}/mark-late
-Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+Authorization: Bearer {{serviceToken}}
 
 ### Mark it late again → 200 with the same fee (days are never charged twice)
 POST {{baseUrl}}/api/rentals/{{overdue.response.body.$[0].id}}/mark-late
-Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+Authorization: Bearer {{serviceToken}}
 
 ### Mark late the booking cancelled above (not Issued or Overdue) → 409 ProblemDetails
-POST {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/mark-late
-Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+POST {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/mark-late
+Authorization: Bearer {{serviceToken}}
 
 ### Mark late an unknown rental → 404 ProblemDetails
 POST {{baseUrl}}/api/rentals/99999/mark-late
-Authorization: Bearer {{serviceLogin.response.body.accessToken}}
+Authorization: Bearer {{serviceToken}}
 
 ### Mark late with a Customer token → 403
-POST {{baseUrl}}/api/rentals/{{newRental.response.body.id}}/mark-late
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+POST {{baseUrl}}/api/rentals/{{newRental.response.body.$.id}}/mark-late
+Authorization: Bearer {{customerToken}}
 
 ### Log in as admin
 # @name adminLogin
@@ -313,20 +364,20 @@ Content-Type: application/json
   "password": "{{adminPassword}}"
 }
 
-### Create a category (Admin) → 201 with Location; the slug is made from the name
+### Create a category (Admin) → 201 with Location; the slug is made from the name ($timestamp keeps it unique)
 # @name newCategory
 POST {{baseUrl}}/api/categories
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "name": "3D Printers",
+  "name": "3D Printers {{$timestamp}}",
   "description": "FDM and resin printers."
 }
 
-### Create a category with a name in use → 409
+### Create a category with a name in use → 409, with the message under errors.Name
 POST {{baseUrl}}/api/categories
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -335,32 +386,32 @@ Content-Type: application/json
 
 ### Create a category as customer → 403
 POST {{baseUrl}}/api/categories
-Authorization: Bearer {{customerLogin.response.body.accessToken}}
+Authorization: Bearer {{customerToken}}
 Content-Type: application/json
 
 {
   "name": "Printers"
 }
 
-### Rename a category (Admin)
-PUT {{baseUrl}}/api/categories/{{newCategory.response.body.id}}
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+### Change the category description (Admin) → 200
+PUT {{baseUrl}}/api/categories/{{newCategory.response.body.$.id}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "name": "3D Printers",
-  "slug": "3d-printers",
+  "name": "{{newCategory.response.body.$.name}}",
+  "slug": "{{newCategory.response.body.$.slug}}",
   "description": "FDM and resin printers, filament included."
 }
 
 ### Create an item (Admin) → 201 with Location
 # @name newItem
 POST {{baseUrl}}/api/items
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "categoryId": {{newCategory.response.body.id}},
+  "categoryId": {{newCategory.response.body.$.id}},
   "name": "Bambu Lab P1S",
   "brand": "Bambu Lab",
   "description": "Enclosed 3D printer for PLA, PETG and ABS.",
@@ -372,7 +423,7 @@ Content-Type: application/json
 
 ### Create an item with invalid fields → 400 ValidationProblemDetails
 POST {{baseUrl}}/api/items
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -382,12 +433,12 @@ Content-Type: application/json
 }
 
 ### Update an item (Admin)
-PUT {{baseUrl}}/api/items/{{newItem.response.body.id}}
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+PUT {{baseUrl}}/api/items/{{newItem.response.body.$.id}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "categoryId": {{newCategory.response.body.id}},
+  "categoryId": {{newCategory.response.body.$.id}},
   "name": "Bambu Lab P1S Combo",
   "brand": "Bambu Lab",
   "description": "Enclosed 3D printer with the AMS for multi-colour prints.",
@@ -398,20 +449,20 @@ Content-Type: application/json
 }
 
 ### Delete a category that still has items → 409
-DELETE {{baseUrl}}/api/categories/{{newCategory.response.body.id}}
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+DELETE {{baseUrl}}/api/categories/{{newCategory.response.body.$.id}}
+Authorization: Bearer {{adminToken}}
 
 ### Retire an item (Admin) → 204; it leaves the catalogue but stays in rental history
-DELETE {{baseUrl}}/api/items/{{newItem.response.body.id}}
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+DELETE {{baseUrl}}/api/items/{{newItem.response.body.$.id}}
+Authorization: Bearer {{adminToken}}
 
 ### Retire an item with open rentals → 409
 DELETE {{baseUrl}}/api/items/1
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Authorization: Bearer {{adminToken}}
 
 ### Unknown item → 404
 PUT {{baseUrl}}/api/items/99999
-Authorization: Bearer {{adminLogin.response.body.accessToken}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -423,3 +474,19 @@ Content-Type: application/json
   "deposit": 0,
   "lateFeePerDay": 0
 }
+
+### Popular items, all time (Admin) → 200, most rentals first, with revenue including late fees
+GET {{baseUrl}}/api/reports/popular-items?top=5
+Authorization: Bearer {{adminToken}}
+
+### Popular items for November (Admin) → 200; rentals that start in the range count
+GET {{baseUrl}}/api/reports/popular-items?from=2026-11-01&to=2026-11-30&top=10
+Authorization: Bearer {{adminToken}}
+
+### Popular items with only one date → 400 ValidationProblemDetails
+GET {{baseUrl}}/api/reports/popular-items?from=2026-11-01
+Authorization: Bearer {{adminToken}}
+
+### Popular items as customer → 403
+GET {{baseUrl}}/api/reports/popular-items
+Authorization: Bearer {{customerToken}}

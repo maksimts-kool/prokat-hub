@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { apiErrorMessage } from '@/api/error-message'
 import { usePostApiAuthLogin } from '@/api/generated/auth/auth'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { useAuth } from '@/auth/auth-context'
 import { AuthCard } from '@/components/auth-card'
 import { FormAlert } from '@/components/form-alert'
@@ -22,7 +23,7 @@ export function LoginPage() {
   const { t } = useTranslation()
   const { signIn } = useAuth()
   const location = useLocation()
-  const login = usePostApiAuthLogin()
+  const login = usePostApiAuthLogin({ mutation: { meta: errorsShownInline } })
 
   // Same rules as LoginRequestValidator on the server.
   const schema = useMemo(
@@ -58,13 +59,15 @@ export function LoginPage() {
     <AuthCard
       title={t('login.title')}
       description={t('login.description')}
+      formTitle={t('login.formTitle')}
+      formText={t('login.formText')}
       footer={
         <>
           {t('login.noAccount')}{' '}
           {/* Pass the return page along, so registering also leads back to it. */}
           <Link
             to={{ pathname: '/register', search: location.search }}
-            className="font-medium text-primary hover:underline dark:text-accent-foreground"
+            className="font-semibold text-primary hover:underline dark:text-accent-foreground"
           >
             {t('login.createAccount')}
           </Link>
@@ -88,14 +91,15 @@ export function LoginPage() {
         ),
       }}
     >
-      <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+      <form noValidate onSubmit={onSubmit} className="flex flex-col gap-6">
         {formError && <FormAlert>{formError}</FormAlert>}
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           <FormField
             label={t('auth.email')}
             type="email"
             icon={Mail}
+            inputSize="lg"
             autoComplete="email"
             placeholder={t('auth.emailPlaceholder')}
             error={errors.email?.message}
@@ -105,13 +109,19 @@ export function LoginPage() {
             label={t('auth.password')}
             type="password"
             icon={Lock}
+            inputSize="lg"
             autoComplete="current-password"
             error={errors.password?.message}
             {...register('password')}
           />
         </div>
 
-        <Button type="submit" size="lg" className="w-full" disabled={login.isPending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-12 w-full rounded-xl text-base"
+          disabled={login.isPending}
+        >
           {login.isPending ? (
             <Loader2 className="animate-spin" aria-hidden />
           ) : (

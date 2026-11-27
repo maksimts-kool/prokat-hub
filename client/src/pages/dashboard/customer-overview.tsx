@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { apiErrorMessage } from '@/api/error-message'
 import type { RentalDto } from '@/api/generated/model'
-import { PageLoader } from '@/components/page-loader'
+import { LoadingRegion, PanelSkeleton } from '@/components/skeletons'
 import { useDateRange } from '@/components/rentals/use-date-range'
 import { Button } from '@/components/ui/button'
 import { useFormat } from '@/i18n/format'
@@ -136,7 +136,14 @@ function WithYou({ rentals, today }: { rentals: RentalDto[]; today: string }) {
 export function CustomerOverview() {
   const { query, upcoming, withYou, today } = useCustomerRentals()
 
-  if (query.isPending) return <PageLoader />
+  if (query.isPending) {
+    return (
+      <LoadingRegion className="grid gap-6 xl:grid-cols-2">
+        <PanelSkeleton rows={2} thumb />
+        <PanelSkeleton rows={2} thumb />
+      </LoadingRegion>
+    )
+  }
   if (query.isError && !query.data) {
     return <LoadError message={apiErrorMessage(query.error)} onRetry={() => void query.refetch()} />
   }

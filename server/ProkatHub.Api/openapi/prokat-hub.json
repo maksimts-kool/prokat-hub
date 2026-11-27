@@ -1498,6 +1498,93 @@
           }
         }
       }
+    },
+    "/api/reports/popular-items": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "The items rented most, with their rental count and revenue (Admin).",
+        "description": "Counts rentals that are not cancelled and start between `from` and `to`; without dates, every\nrental. Revenue is the rentals' totals plus the late fees charged on them. Retired items are included.",
+        "parameters": [
+          {
+            "name": "From",
+            "in": "query",
+            "description": "First start day counted (inclusive). Give both dates or neither; without dates every rental counts.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "description": "Last start day counted (inclusive).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "Top",
+            "in": "query",
+            "description": "How many items to list, 1–50. Default 10.",
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PopularItemsReportDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1705,7 +1792,7 @@
           "dailyPrice",
           "deposit",
           "lateFeePerDay",
-          "imageUrl",
+          "imageUrls",
           "specifications"
         ],
         "type": "object",
@@ -1742,11 +1829,12 @@
             "type": "number",
             "format": "double"
           },
-          "imageUrl": {
-            "type": [
-              "null",
-              "string"
-            ]
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Photo URLs in display order; the first one is the cover. Empty when the item has none."
           },
           "specifications": {
             "type": "array",
@@ -1762,7 +1850,7 @@
           "name",
           "brand",
           "description",
-          "imageUrl",
+          "imageUrls",
           "dailyPrice",
           "deposit",
           "lateFeePerDay"
@@ -1789,11 +1877,17 @@
             "minLength": 1,
             "type": "string"
           },
-          "imageUrl": {
+          "imageUrls": {
             "type": [
               "null",
-              "string"
-            ]
+              "array"
+            ],
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "description": "Photo URLs in display order, the cover first; null or empty for no photos."
           },
           "dailyPrice": {
             "maximum": 100000,
@@ -1850,7 +1944,7 @@
           "categoryName",
           "dailyPrice",
           "deposit",
-          "imageUrl",
+          "imageUrls",
           "isAvailable"
         ],
         "type": "object",
@@ -1880,11 +1974,12 @@
             "type": "number",
             "format": "double"
           },
-          "imageUrl": {
-            "type": [
-              "null",
-              "string"
-            ]
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Photo URLs in display order; the first one is the cover. Empty when the item has none."
           },
           "isAvailable": {
             "type": [
@@ -1980,6 +2075,106 @@
             "format": "int32"
           }
         }
+      },
+      "PopularItemDto": {
+        "required": [
+          "itemId",
+          "name",
+          "brand",
+          "categoryName",
+          "isRetired",
+          "rentalCount",
+          "rentalDays",
+          "revenue",
+          "lateFees"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "isRetired": {
+            "type": "boolean",
+            "description": "The item has left the catalogue; its past rentals still count."
+          },
+          "rentalCount": {
+            "type": "integer",
+            "description": "Rentals of the item that start in the range, cancelled ones left out.",
+            "format": "int32"
+          },
+          "rentalDays": {
+            "type": "integer",
+            "description": "Days those rentals cover.",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "description": "The rentals' totals plus the late fees charged on them.",
+            "format": "double"
+          },
+          "lateFees": {
+            "type": "number",
+            "description": "The late fee part of Revenue.",
+            "format": "double"
+          }
+        },
+        "description": "One item of the popular items report."
+      },
+      "PopularItemsReportDto": {
+        "required": [
+          "from",
+          "to",
+          "totalRentals",
+          "totalRevenue",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "First start day counted; null for all time.",
+            "format": "date"
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Last start day counted; null for all time.",
+            "format": "date"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "description": "Rentals of every item in the range, not only the listed ones.",
+            "format": "int32"
+          },
+          "totalRevenue": {
+            "type": "number",
+            "description": "Revenue of every item in the range, not only the listed ones.",
+            "format": "double"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PopularItemDto"
+            },
+            "description": "The most rented items: most rentals first, then most revenue, then by name."
+          }
+        },
+        "description": "Answer of `GET /api/reports/popular-items`."
       },
       "ProblemDetails": {
         "type": "object",
@@ -2428,6 +2623,9 @@
     },
     {
       "name": "Rentals"
+    },
+    {
+      "name": "Reports"
     }
   ]
 }

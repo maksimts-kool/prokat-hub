@@ -14,6 +14,7 @@ import {
   usePostApiRentals,
 } from '@/api/generated/rentals/rentals'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { useAuth } from '@/auth/auth-context'
 import { authPath } from '@/auth/return-path'
 import { pageRoles } from '@/auth/roles'
@@ -26,6 +27,14 @@ import { bookingDatesError } from '@/lib/booking-schema'
  */
 export type BookingAccess = 'customer' | 'guest' | 'staff' | 'loading'
 
+/** Whether the current user may book, see {@link BookingAccess}. */
+export function useBookingAccess(): BookingAccess {
+  const { status, hasRole } = useAuth()
+  if (status === 'loading') return 'loading'
+  if (status === 'guest') return 'guest'
+  return hasRole(...pageRoles.rentals) ? 'customer' : 'staff'
+}
+
 /**
  * Books an item for the chosen dates with `POST /api/rentals`. Guests go to the login page and come
  * back to the same dates. The dates are checked with Zod first; a 409 Conflict reloads the item's
@@ -34,21 +43,13 @@ export type BookingAccess = 'customer' | 'guest' | 'staff' | 'loading'
 export function useBookItem(itemId: number, itemName: string) {
   const { t } = useTranslation()
   const { formatDate } = useFormat()
-  const { status, hasRole } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
-  const create = usePostApiRentals()
+  const create = usePostApiRentals({ mutation: { meta: errorsShownInline } })
   const [validationError, setValidationError] = useState<string>()
 
-  const access: BookingAccess =
-    status === 'loading'
-      ? 'loading'
-      : status === 'guest'
-        ? 'guest'
-        : hasRole(...pageRoles.rentals)
-          ? 'customer'
-          : 'staff'
+  const access = useBookingAccess()
 
   /** Reloads the booked days and quotes of this item, e.g. after someone else took the dates. */
   function refreshAvailability() {

@@ -34,7 +34,7 @@ public static class DemoCatalogue
                 DailyPrice = dailyPrice,
                 Deposit = deposit,
                 LateFeePerDay = Math.Round(dailyPrice * LateFeeRate, 2),
-                ImageUrl = $"https://placehold.co/640x480/png?text={Uri.EscapeDataString(name)}",
+                ImageUrls = ImagesFor(name),
                 Specifications = SpecificationsFor(name),
                 CreatedAt = now,
             });
@@ -81,6 +81,30 @@ public static class DemoCatalogue
 
         return [cameras, lenses, drones, audio, projectors, laptops, consoles];
     }
+
+    /// <summary>
+    /// Placeholder photos for a demo item: one per view, each on its own light tint so a gallery or a
+    /// card flipping through them shows the change.
+    /// </summary>
+    public static List<string> ImagesFor(string itemName) =>
+        ImageViews
+            .Select(view => $"https://placehold.co/640x480/{view.Background}/334155/png?text={Uri.EscapeDataString($"{itemName}\\n{view.Label}")}")
+            .ToList();
+
+    /// <summary>The one placeholder photo demo items were seeded with before they had several.</summary>
+    public static string LegacyImageFor(string itemName) =>
+        $"https://placehold.co/640x480/png?text={Uri.EscapeDataString(itemName)}";
+
+    /// <summary>Whether the name belongs to an item of the demo catalogue.</summary>
+    public static bool IsDemoItem(string itemName) => Specifications.ContainsKey(itemName);
+
+    private static readonly (string Label, string Background)[] ImageViews =
+    [
+        ("Front", "f1f5f9"),
+        ("Side", "e0f2fe"),
+        ("Detail", "fef3c7"),
+        ("In the box", "dcfce7"),
+    ];
 
     /// <summary>The demo item's specifications, or none for an item that is not in the demo catalogue.</summary>
     public static List<ItemSpecification> SpecificationsFor(string itemName) =>

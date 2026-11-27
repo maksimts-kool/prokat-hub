@@ -15,10 +15,11 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
         if (query.NormalizedSearch() is { } search)
         {
             var pattern = $"%{EscapeLikePattern(search)}%";
+            // The columns use a case-insensitive collation (AppDbContext), so LIKE ignores case.
             items = items.Where(i =>
-                EF.Functions.ILike(i.Name, pattern, @"\") ||
-                EF.Functions.ILike(i.Brand, pattern, @"\") ||
-                EF.Functions.ILike(i.Description, pattern, @"\"));
+                EF.Functions.Like(i.Name, pattern, @"\") ||
+                EF.Functions.Like(i.Brand, pattern, @"\") ||
+                EF.Functions.Like(i.Description, pattern, @"\"));
         }
 
         if (query.CategoryId is { } categoryId)
@@ -58,7 +59,7 @@ public sealed class ItemRepository(AppDbContext db) : IItemRepository
 
     public Task<Item?> GetForBookingAsync(int id, CancellationToken cancellationToken = default) =>
         db.Items
-            .FromSql($"""SELECT * FROM "Items" WHERE "Id" = {id} AND "IsActive" FOR UPDATE""")
+            .FromSql($"SELECT * FROM `Items` WHERE `Id` = {id} AND `IsActive` FOR UPDATE")
             .FirstOrDefaultAsync(cancellationToken);
 
     public void Add(Item item) => db.Items.Add(item);

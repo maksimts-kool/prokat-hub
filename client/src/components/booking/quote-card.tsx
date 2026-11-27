@@ -1,4 +1,4 @@
-import { Clock, Loader2, ShieldCheck } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { RentalQuoteDto } from '@/api/generated/model'
@@ -18,9 +18,6 @@ interface QuoteCardProps {
   /** True while a quote for new dates is loading; the old one stays on screen. */
   loading: boolean
   error: string | undefined
-  /** The item's deposit and late fee per day, shown under the action even before dates are picked. */
-  deposit: number
-  lateFeePerDay: number
   /** The booking action, below the price. */
   children?: ReactNode
   className?: string
@@ -33,8 +30,6 @@ export function QuoteCard({
   preview,
   loading,
   error,
-  deposit,
-  lateFeePerDay,
   children,
   className,
 }: QuoteCardProps) {
@@ -110,18 +105,6 @@ export function QuoteCard({
       {children}
 
       {error && <FormAlert>{error}</FormAlert>}
-
-      <div className="flex flex-col gap-4">
-        <Note icon={<ShieldCheck />}>
-          <strong className="font-semibold text-foreground">
-            {t('item.quote.deposit', { amount: formatPrice(deposit) })}
-          </strong>{' '}
-          {t('item.quote.depositNote')}
-        </Note>
-        <Note icon={<Clock />}>
-          {t('item.quote.lateFee', { amount: formatPrice(lateFeePerDay) })}
-        </Note>
-      </div>
     </aside>
   )
 }
@@ -143,20 +126,6 @@ function PreviewNote({ from, to, days }: { from: Date; to: Date; days: number })
       <span>{t('item.quote.previewDays', { count: days })}</span>
       {discount > 0 && <Badge tone="highlight">−{discount}%</Badge>}
     </p>
-  )
-}
-
-function Note({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-  return (
-    <div className="flex gap-2 rounded-lg bg-muted p-3 text-[13px] leading-[18px] text-muted-foreground">
-      <span
-        className="mt-px shrink-0 text-primary dark:text-accent-foreground [&_svg]:size-4"
-        aria-hidden
-      >
-        {icon}
-      </span>
-      <p>{children}</p>
-    </div>
   )
 }
 

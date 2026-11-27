@@ -1,4 +1,5 @@
 import { CalendarCheck, Loader2, LogIn } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { RentalQuoteDto } from '@/api/generated/model'
 import { Badge } from '@/components/ui/badge'
@@ -71,10 +72,12 @@ export function BookNote({ access }: { access: BookingAccess }) {
 interface MobileBookBarProps extends BookButtonProps {
   /** The problem with the chosen dates, shown in place of the summary. */
   error: string | undefined
+  /** A second action beside Book, e.g. the add-to-cart icon button. */
+  extra?: ReactNode
 }
 
 /** Phones: the total and the Book button pinned to the bottom while the page scrolls. */
-export function MobileBookBar({ error, className, ...button }: MobileBookBarProps) {
+export function MobileBookBar({ error, extra, className, ...button }: MobileBookBarProps) {
   const { t } = useTranslation()
   const { formatPrice } = useFormat()
   const { quote, blocked } = button
@@ -109,7 +112,10 @@ export function MobileBookBar({ error, className, ...button }: MobileBookBarProp
           <p className="text-sm text-muted-foreground">{t('item.chooseDates')}</p>
         )}
       </div>
-      <BookButton {...button} className="w-auto shrink-0 px-6" quote={undefined} />
+      <div className="flex shrink-0 items-center gap-2">
+        {extra}
+        <BookButton {...button} className="w-auto shrink-0 px-6" quote={undefined} />
+      </div>
     </div>
   )
 }

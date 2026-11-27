@@ -9,7 +9,7 @@ interface Indicator {
   width: number
 }
 
-/** Desktop menu: a purple pill slides under the active link. */
+/** Desktop menu in the dark header: a purple pill slides under the active link. */
 export function MainNav() {
   const { t, i18n } = useTranslation()
   const navItems = useNavItems()
@@ -65,7 +65,7 @@ export function MainNav() {
           className={({ isActive }) =>
             cn(
               'relative z-10 flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-300 lg:px-4',
-              isActive ? 'text-primary-foreground' : 'text-foreground/70 hover:text-primary',
+              isActive ? 'text-primary-foreground' : 'text-foreground/70 hover:text-band-accent',
             )
           }
         >

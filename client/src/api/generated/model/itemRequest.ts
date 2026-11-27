@@ -27,8 +27,13 @@ export interface ItemRequest {
    * @maxLength 2000
    */
   description: string
-  /** @nullable */
-  imageUrl: string | null
+  /**
+   * Photo URLs in display order, the cover first; null or empty for no photos.
+   * @nullable
+   * @items.minLength 1
+   * @items.maxLength 500
+   */
+  imageUrls: string[] | null
   /**
    * @minimum 0.01
    * @maximum 100000

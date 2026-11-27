@@ -10,8 +10,8 @@ public class DiscountTierConfiguration : IEntityTypeConfiguration<DiscountTier>
     {
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint("CK_DiscountTiers_MinDays", "\"MinDays\" >= 1");
-            t.HasCheckConstraint("CK_DiscountTiers_Percent", "\"Percent\" >= 0 AND \"Percent\" <= 100");
+            t.HasCheckConstraint("CK_DiscountTiers_MinDays", "`MinDays` >= 1");
+            t.HasCheckConstraint("CK_DiscountTiers_Percent", "`Percent` >= 0 AND `Percent` <= 100");
         });
 
         builder.Property(d => d.Name).HasMaxLength(50);

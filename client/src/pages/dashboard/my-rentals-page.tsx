@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router'
 import { apiErrorMessage } from '@/api/error-message'
 import type { RentalDto } from '@/api/generated/model'
-import { PageLoader } from '@/components/page-loader'
+import { LoadingRegion, PillTabsSkeleton } from '@/components/skeletons'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useCancelRental } from '@/components/rentals/use-cancel-rental'
 import { useDateRange } from '@/components/rentals/use-date-range'
 import { StatusBadge } from '@/components/status-badge'
@@ -181,6 +182,33 @@ function RentalRow({
   )
 }
 
+/** The tabs and three rental cards in the shape of {@link RentalRow}, while the list loads. */
+function RentalsSkeleton() {
+  return (
+    <LoadingRegion>
+      <PillTabsSkeleton />
+      <ul className="flex flex-col gap-3">
+        {['w-1/2', 'w-2/5', 'w-3/5'].map((width) => (
+          <li
+            key={width}
+            className="grid grid-cols-[56px_minmax(0,1fr)] gap-x-4 gap-y-4 rounded-xl border bg-card p-4 sm:p-5 md:grid-cols-[64px_minmax(0,1fr)_140px] md:items-center md:gap-x-5"
+          >
+            <Skeleton className="size-14 rounded-lg md:size-16" />
+            <div className="flex flex-col gap-2">
+              <Skeleton className={`h-6 ${width}`} />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+            <div className="col-span-2 flex flex-col gap-2 border-t pt-4 md:col-span-1 md:items-end md:border-0 md:pt-0">
+              <Skeleton className="h-7 w-24" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </LoadingRegion>
+  )
+}
+
 /** A customer's rentals, newest first, filtered by status group, with cancelling for Booked ones. */
 export function MyRentalsPage() {
   const { t } = useTranslation()
@@ -190,7 +218,7 @@ export function MyRentalsPage() {
   const tabParam = params.get('tab')
   const active: Tab = isTab(tabParam) ? tabParam : 'all'
 
-  if (query.isPending) return <PageLoader />
+  if (query.isPending) return <RentalsSkeleton />
   if (query.isError && !query.data) {
     return <LoadError message={apiErrorMessage(query.error)} onRetry={() => void query.refetch()} />
   }

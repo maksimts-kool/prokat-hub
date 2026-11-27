@@ -32,12 +32,12 @@ erDiagram
         decimal Deposit
         decimal LateFeePerDay
         bool IsActive
-        timestamptz CreatedAt
+        datetime CreatedAt
     }
     Rentals {
         int Id PK
         int ItemId FK
-        uuid CustomerId FK
+        guid CustomerId FK
         date StartDate
         date EndDate
         string Status
@@ -46,17 +46,17 @@ erDiagram
         decimal TotalPrice
         decimal Deposit
         decimal LateFeePerDay
-        timestamptz CreatedAt
-        timestamptz IssuedAt
-        timestamptz ReturnedAt
+        datetime CreatedAt
+        datetime IssuedAt
+        datetime ReturnedAt
     }
     RentalStatusHistory {
         int Id PK
         int RentalId FK
         string FromStatus
         string ToStatus
-        timestamptz ChangedAt
-        uuid ChangedById FK
+        datetime ChangedAt
+        guid ChangedById FK
         string Note
     }
     LateFees {
@@ -64,7 +64,7 @@ erDiagram
         int RentalId FK
         date ChargeDate
         decimal Amount
-        timestamptz CreatedAt
+        datetime CreatedAt
     }
     DiscountTiers {
         int Id PK
@@ -73,18 +73,18 @@ erDiagram
         decimal Percent
     }
     AspNetUsers {
-        uuid Id PK
+        guid Id PK
         string Email UK
         string FullName
-        timestamptz CreatedAt
+        datetime CreatedAt
     }
     AspNetRoles {
-        uuid Id PK
+        guid Id PK
         string Name UK
     }
     AspNetUserRoles {
-        uuid UserId PK, FK
-        uuid RoleId PK, FK
+        guid UserId PK, FK
+        guid RoleId PK, FK
     }
 ```
 
@@ -99,7 +99,8 @@ erDiagram
 | `Rentals` | `EndDate >= StartDate`; index on `(ItemId, StartDate, EndDate)` for overlap checks |
 | `LateFees` | unique `(RentalId, ChargeDate)`, so a day is never charged twice |
 | `DiscountTiers` | `MinDays` is unique and `>= 1`; `Percent` is between 0 and 100 |
-| all money columns | `numeric(10,2)`; `DiscountTiers.Percent` is `numeric(5,2)` |
+| all money columns | `decimal(10,2)`; `DiscountTiers.Percent` is `decimal(5,2)` |
+| all tables | MariaDB, `utf8mb4` with the case-insensitive `utf8mb4_unicode_ci` collation, so names that differ only in case count as equal. Times are stored in UTC (`datetime(6)`), ids of users and roles as `char(36)` GUIDs, and item specifications as JSON text |
 
 Deleting a category or item that has rentals is blocked (`RESTRICT`). Items are retired with `IsActive = false` instead.
 

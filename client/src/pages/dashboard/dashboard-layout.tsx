@@ -63,7 +63,8 @@ export function DashboardLayout() {
       : t(`dashboard.sections.${section}`)
 
   return (
-    <div>
+    // A fragment: the band is a full-bleed child of the page grid.
+    <>
       <Band section={section} title={title} staff={hasRole(...pageRoles.desk)} />
 
       <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
@@ -99,6 +100,6 @@ export function DashboardLayout() {
           <Outlet />
         </div>
       </div>
-    </div>
+    </>
   )
 }

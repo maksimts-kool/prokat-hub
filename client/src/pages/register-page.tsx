@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { apiErrorMessage, serverFieldErrors } from '@/api/error-message'
 import { usePostApiAuthRegister } from '@/api/generated/auth/auth'
 import { isApiError } from '@/api/http-client'
+import { errorsShownInline } from '@/api/query-client'
 import { useAuth } from '@/auth/auth-context'
 import { AuthCard } from '@/components/auth-card'
 import { FormAlert } from '@/components/form-alert'
@@ -25,7 +26,7 @@ export function RegisterPage() {
   const { t } = useTranslation()
   const { signIn } = useAuth()
   const location = useLocation()
-  const registerAccount = usePostApiAuthRegister()
+  const registerAccount = usePostApiAuthRegister({ mutation: { meta: errorsShownInline } })
 
   // Same rules as RegisterRequestValidator and the Identity password options on the server.
   const schema = useMemo(() => {
@@ -96,12 +97,14 @@ export function RegisterPage() {
     <AuthCard
       title={t('register.title')}
       description={t('register.description')}
+      formTitle={t('register.formTitle')}
+      formText={t('register.formText')}
       footer={
         <>
           {t('register.haveAccount')}{' '}
           <Link
             to={{ pathname: '/login', search: location.search }}
-            className="font-medium text-primary hover:underline dark:text-accent-foreground"
+            className="font-semibold text-primary hover:underline dark:text-accent-foreground"
           >
             {t('register.logIn')}
           </Link>
@@ -124,13 +127,14 @@ export function RegisterPage() {
         ],
       }}
     >
-      <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+      <form noValidate onSubmit={onSubmit} className="flex flex-col gap-6">
         {formError && <FormAlert>{formError}</FormAlert>}
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           <FormField
             label={t('register.fullName')}
             icon={User}
+            inputSize="lg"
             autoComplete="name"
             error={errors.fullName?.message}
             {...register('fullName')}
@@ -139,6 +143,7 @@ export function RegisterPage() {
             label={t('auth.email')}
             type="email"
             icon={Mail}
+            inputSize="lg"
             autoComplete="email"
             placeholder={t('auth.emailPlaceholder')}
             error={errors.email?.message}
@@ -148,6 +153,7 @@ export function RegisterPage() {
             label={t('auth.password')}
             type="password"
             icon={Lock}
+            inputSize="lg"
             autoComplete="new-password"
             hint={t('register.passwordRule')}
             error={errors.password?.message}
@@ -155,7 +161,12 @@ export function RegisterPage() {
           />
         </div>
 
-        <Button type="submit" size="lg" className="w-full" disabled={registerAccount.isPending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-12 w-full rounded-xl text-base"
+          disabled={registerAccount.isPending}
+        >
           {registerAccount.isPending && <Loader2 className="animate-spin" aria-hidden />}
           {t('register.submit')}
         </Button>
