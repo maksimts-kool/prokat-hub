@@ -23,7 +23,7 @@ export const et: Translations = {
     usefulLinks: 'Kasulikud lingid',
     footerCategories: 'Kategooriad',
     footerAccount: 'Konto',
-    copyright: '© {{year}} Prokat Hub',
+    copyright: '© {{year}} Prokat Hub · Maksim Tsikvasvili',
   },
   language: {
     label: 'Keel',

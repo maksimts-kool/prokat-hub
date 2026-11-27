@@ -24,7 +24,7 @@ export const en = {
     usefulLinks: 'Useful links',
     footerCategories: 'Categories',
     footerAccount: 'Account',
-    copyright: '© {{year}} Prokat Hub',
+    copyright: '© {{year}} Prokat Hub · Maksim Tsikvasvili',
   },
   language: {
     label: 'Language',
