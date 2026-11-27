@@ -7,15 +7,14 @@
 
 ### Rent the latest electronics, hassle-free
 
-A rental management system for an electronics rental shop: customers book cameras, drones and laptops for their dates, staff hand them out and take them back, and admins run the catalogue and read the reports.
+[![CI](https://img.shields.io/github/actions/workflow/status/maksimts-kool/prokat-hub/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI&labelColor=1c1740)](https://github.com/maksimts-kool/prokat-hub/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/maksimts-kool/prokat-hub?style=for-the-badge&color=4f2ad5&labelColor=1c1740)](LICENSE)
 
-[![CI](https://github.com/maksimts-kool/prokat-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/maksimts-kool/prokat-hub/actions/workflows/ci.yml)
-[![License: AGPL-3.0](https://img.shields.io/github/license/maksimts-kool/prokat-hub?color=4f2ad5)](LICENSE)
-![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
-![React 19](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
-![MariaDB](https://img.shields.io/badge/MariaDB-11.4-003545?logo=mariadb&logoColor=white)
-![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![.NET 10](https://img.shields.io/badge/.NET_10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![React 19](https://img.shields.io/badge/React_19-149ECA?style=for-the-badge&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 [Quick start](#quick-start) •
 [Features](#features) •
@@ -142,7 +141,7 @@ The domain model, ER diagram, status flow and pricing rules are in [docs/er-diag
 
 ## <img src="docs/icons/rocket.svg" height="28" alt="">Quick start
 
-The only thing you need is **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (or Docker Engine with Compose v2.22+). No .NET SDK or Node.js is needed on your machine.
+The only thing you need is **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (or Docker Engine with Compose v2.22+).
 
 **1. Clone the repository**
 
@@ -156,8 +155,6 @@ cd prokat-hub
 ```bash
 cp .env.example .env
 ```
-
-The example values work for local use as they are. `.env` holds every secret: the database passwords, `JWT_SIGNING_KEY` and the demo account passwords. It is git-ignored. Change all of them before you deploy anywhere public.
 
 **3. Build and start everything**
 
@@ -175,7 +172,7 @@ This starts MariaDB, the API, the overdue worker and the web client. The API wai
 docker compose watch
 ```
 
-This does the same as `up --build` and also syncs your code changes into the containers. `dotnet watch` reloads the API and Vite hot-reloads the client. Changing `package.json` or a `.csproj` rebuilds that image.
+This does the same as `up --build` and also syncs your code changes into the containers.
 
 ### Production images
 
@@ -195,7 +192,7 @@ The API then runs on the ASP.NET runtime only, and nginx serves the built client
 docker compose down
 ```
 
-To also delete the database and start again from fresh demo data, run `docker compose down -v`. This removes the `prokat-hub-mariadb-data` volume and everything in it.
+To also delete the database and start again from fresh demo data, run `docker compose down -v`.
 
 ## <img src="docs/icons/plug.svg" height="28" alt="">Ports and URLs
 
@@ -218,10 +215,10 @@ One account per role is created on start. The passwords are the `SEED_*_PASSWORD
 | --- | --- | --- | --- |
 | Customer | `customer@prokathub.test` | `Customer12345` | Browse, book items, see and cancel own rentals |
 | Staff | `staff@prokathub.test` | `Staff12345` | Rental desk: issue, receive, mark overdue |
-| Admin | `admin@prokathub.test` | `Admin12345` | Everything Staff can do, plus catalogue and reports |
+| Admin | `admin@prokathub.test` | `Admin12345` | Staff features + catalogue and reports |
 | Service | `service@prokathub.test` | `Service12345` | Used by the worker to find and mark overdue rentals |
 
-An account is skipped when its password is empty, except Service, which the worker needs. You can also register a new customer account on the site. The demo data includes a few rentals for the customer in different statuses, including an overdue one.
+An account is skipped when its password is empty, except Service, which the worker needs.
 
 ## <img src="docs/icons/code.svg" height="28" alt="">API
 
@@ -260,7 +257,7 @@ To call protected endpoints in Swagger:
 
 Errors come back as [`ProblemDetails`](https://www.rfc-editor.org/rfc/rfc9457) with a `traceId`. Validation errors (`400`) list the message for each field.
 
-[`http/prokat-hub.http`](http/prokat-hub.http) has a request for every endpoint, including the `400`, `401`, `403`, `404` and `409` cases. Use it in the VS Code REST Client, Visual Studio or Rider: set `@today` at the top, then run the requests from top to bottom against a running stack.
+[`http/prokat-hub.http`](http/prokat-hub.http) has a request for every endpoint, including the `400`, `401`, `403`, `404` and `409` cases.
 
 ## <img src="docs/icons/flask-conical.svg" height="28" alt="">Tests
 
@@ -269,8 +266,6 @@ Run the 238 xUnit tests for the API and the worker in Docker:
 ```bash
 docker compose run --rm tests
 ```
-
-The `tests` service builds the solution in a .NET SDK container and runs `dotnet test`. It belongs to the `test` profile, so `docker compose up` does not start it. The tests cover pricing and discounts, availability and double bookings, the status flow, late fees, validation, mapping, reports, SignalR notifications and the worker.
 
 Check the web client with lint, formatting and a type-checked build (the stack must be running with the dev images):
 
@@ -322,9 +317,9 @@ prokat-hub/
 docker compose logs -f api
 ```
 
-The API logs through [Serilog](https://serilog.net/), one line per request with the method, path, status, duration, user id and trace id. The trace id is the same as `traceId` in error responses, so a failed call in the browser can be matched with its log line. Requests to `/health`, Swagger and OpenAPI are logged at Debug level and hidden by default.
+The API logs through [Serilog](https://serilog.net/). Requests to `/health`, Swagger and OpenAPI are logged at Debug level and hidden by default.
 
-Levels and the output format are in the `Serilog` section of `appsettings.json`. Override them with environment variables in `compose.yaml`. For example, `Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore.Database.Command: Information` shows the SQL queries.
+Levels and the output format are in the `Serilog` section of `appsettings.json`. Override them with environment variables in `compose.yaml`.
 
 </details>
 
@@ -342,7 +337,7 @@ Levels and the output format are in the `Serilog` section of `appsettings.json`.
 docker compose logs -f worker
 ```
 
-The worker only talks to the API over HTTP and has no database access. It reuses its token until shortly before it expires, and logs in again once after a `401`. The Polly resilience pipeline (retries with backoff, timeouts, circuit breaker) lets it wait out an API restart. A failed run is logged, and the worker carries on with the next one.
+The worker only talks to the API over HTTP and has no database access.
 
 </details>
 
