@@ -133,6 +133,13 @@ services:
         - action: rebuild
           path: ./client/pnpm-lock.yaml
 
+  tests:
+    # Not started by `up`; run the xUnit tests with: docker compose run --rm tests
+    profiles: [test]
+    build:
+      context: ./server
+      dockerfile: ProkatHub.Tests/Dockerfile
+
 volumes:
   # A new name, so the old PostgreSQL data volume isn't mounted into MariaDB.
   db-data:
